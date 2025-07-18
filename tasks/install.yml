@@ -95,6 +95,6 @@
 
 - name: Ensure Excalidraw systemd service is present
   ansible.builtin.template:
-    src: "{{ role_path }}/templates/systemd/excalidraw.service.j2"
+    src: "{{ role_path }}/templates/systemd/excalidraw-room.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ excalidraw_room_identifier }}.service"
     mode: "0644"
