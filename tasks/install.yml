@@ -1,0 +1,100 @@
+# SPDX-FileCopyrightText: 2023 - 2025 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2025 Suguru Hirahara
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Ensure Excalidraw paths exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0750"
+    owner: "{{ excalidraw_uid }}"
+    group: "{{ excalidraw_gid }}"
+  with_items:
+    - "{{ excalidraw_base_path }}"
+
+- name: Ensure Excalidraw support files installed
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/{{ item }}.j2"
+    dest: "{{ excalidraw_base_path }}/{{ item }}"
+    mode: "0640"
+    owner: "{{ excalidraw_uid }}"
+    group: "{{ excalidraw_gid }}"
+  with_items:
+    - env
+    - labels
+
+- name: Run if self-building of Excalidraw container image is not enabled
+  when: "not excalidraw_container_image_self_build | bool"
+  block:
+    - name: Ensure Excalidraw container image is pulled via community.docker.docker_image
+      when: devture_systemd_docker_base_container_image_pull_method == 'ansible-module'
+      community.docker.docker_image:
+        name: "{{ excalidraw_container_image }}"
+        source: "{{ 'pull' if ansible_version.major > 2 or ansible_version.minor > 7 else omit }}"
+        force_source: "{{ excalidraw_container_image_force_pull if ansible_version.major > 2 or ansible_version.minor >= 8 else omit }}"
+        force: "{{ omit if ansible_version.major > 2 or ansible_version.minor >= 8 else excalidraw_container_image_force_pull }}"
+      register: result
+      retries: "{{ devture_playbook_help_container_retries_count }}"
+      delay: "{{ devture_playbook_help_container_retries_delay }}"
+      until: result is not failed
+
+    - name: Ensure Excalidraw container image is pulled via ansible.builtin.command
+      when: devture_systemd_docker_base_container_image_pull_method == 'command'
+      ansible.builtin.command:
+        cmd: "{{ devture_systemd_docker_base_host_command_docker }} pull {{ excalidraw_container_image }}"
+      register: result
+      retries: "{{ devture_playbook_help_container_retries_count }}"
+      delay: "{{ devture_playbook_help_container_retries_delay }}"
+      until: result is not failed
+      changed_when: "'Downloaded newer image' in result.stdout"
+
+- name: Run if self-building of Excalidraw container image is enabled
+  when: "excalidraw_container_image_self_build | bool"
+  block:
+    - name: Ensure Excalidraw repository is present on self-build
+      ansible.builtin.git:
+        repo: "{{ excalidraw_container_image_self_build_repo }}"
+        version: "{{ excalidraw_container_image_self_build_repo_version }}"
+        dest: "{{ excalidraw_container_image_self_build_src_files_path }}"
+        force: "yes"
+      register: excalidraw_git_pull_results
+
+    - name: Ensure Excalidraw container image is built
+      community.docker.docker_image:
+        name: "{{ excalidraw_container_image_self_build_name }}"
+        source: build
+        force_source: "{{ excalidraw_git_pull_results.changed if ansible_version.major > 2 or ansible_version.minor >= 8 else omit }}"
+        force: "{{ omit if ansible_version.major > 2 or ansible_version.minor >= 8 else excalidraw_git_pull_results.changed }}"
+        build:
+          dockerfile: Dockerfile
+          path: "{{ excalidraw_container_image_self_build_src_files_path }}"
+          pull: true
+          args:
+
+- name: Ensure Excalidraw container network is created via community.docker.docker_network
+  when: devture_systemd_docker_base_container_network_creation_method == 'ansible-module'
+  community.docker.docker_network:
+    enable_ipv6: "{{ devture_systemd_docker_base_ipv6_enabled }}"
+    name: "{{ excalidraw_container_network }}"
+    driver: bridge
+    driver_options: "{{ devture_systemd_docker_base_container_networks_driver_options }}"
+
+- name: Ensure Excalidraw container network is created via ansible.builtin.command
+  when: devture_systemd_docker_base_container_network_creation_method == 'command'
+  ansible.builtin.command:
+    cmd: >-
+      {{ devture_systemd_docker_base_host_command_docker }} network create
+      {% if devture_systemd_docker_base_ipv6_enabled %}--ipv6{% endif %}
+      {{ devture_systemd_docker_base_container_networks_driver_options_string }}
+      {{ excalidraw_container_network }}
+  register: network_creation_result
+  changed_when: network_creation_result.rc == 0
+  failed_when: network_creation_result.rc != 0 and 'already exists' not in network_creation_result.stderr
+
+- name: Ensure Excalidraw systemd service is present
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/systemd/excalidraw.service.j2"
+    dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ excalidraw_identifier }}.service"
+    mode: "0644"

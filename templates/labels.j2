@@ -1,0 +1,57 @@
+{#
+SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+SPDX-FileCopyrightText: 2025 Suguru Hirahara
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+#}
+
+{% if excalidraw_container_labels_traefik_enabled %}
+traefik.enable=true
+
+{% if excalidraw_container_labels_traefik_docker_network %}
+traefik.docker.network={{ excalidraw_container_labels_traefik_docker_network }}
+{% endif %}
+
+{% set middlewares = [] %}
+
+{% if excalidraw_basic_auth_enabled %}
+traefik.http.middlewares.{{ excalidraw_identifier }}-auth.basicauth.users={{ excalidraw_container_label_basicauth_users }}
+{% set middlewares = middlewares + [excalidraw_identifier + '-auth@docker'] %}
+{% endif %}
+
+{% if excalidraw_container_labels_traefik_path_prefix != '/' %}
+traefik.http.middlewares.{{ excalidraw_identifier }}-slashless-redirect.redirectregex.regex=({{ excalidraw_container_labels_traefik_path_prefix | quote }})$
+traefik.http.middlewares.{{ excalidraw_identifier }}-slashless-redirect.redirectregex.replacement=${1}/
+{% set middlewares = middlewares + [excalidraw_identifier + '-slashless-redirect'] %}
+{% endif %}
+
+{% if excalidraw_container_labels_traefik_path_prefix != '/' %}
+traefik.http.middlewares.{{ excalidraw_identifier }}-strip-prefix.stripprefix.prefixes={{ excalidraw_container_labels_traefik_path_prefix }}
+{% set middlewares = middlewares + [excalidraw_identifier + '-strip-prefix'] %}
+{% endif %}
+
+{% if excalidraw_container_labels_traefik_additional_response_headers.keys() | length > 0 %}
+{% for name, value in excalidraw_container_labels_traefik_additional_response_headers.items() %}
+traefik.http.middlewares.{{ excalidraw_identifier }}-add-headers.headers.customresponseheaders.{{ name }}={{ value }}
+{% endfor %}
+{% set middlewares = middlewares + [excalidraw_identifier + '-add-headers'] %}
+{% endif %}
+
+traefik.http.routers.{{ excalidraw_identifier }}.rule={{ excalidraw_container_labels_traefik_rule }}
+{% if excalidraw_container_labels_traefik_priority | int > 0 %}
+traefik.http.routers.{{ excalidraw_identifier }}.priority={{ excalidraw_container_labels_traefik_priority }}
+{% endif %}
+traefik.http.routers.{{ excalidraw_identifier }}.service={{ excalidraw_identifier }}
+{% if middlewares | length > 0 %}
+traefik.http.routers.{{ excalidraw_identifier }}.middlewares={{ middlewares | join(',') }}
+{% endif %}
+traefik.http.routers.{{ excalidraw_identifier }}.entrypoints={{ excalidraw_container_labels_traefik_entrypoints }}
+traefik.http.routers.{{ excalidraw_identifier }}.tls={{ excalidraw_container_labels_traefik_tls | to_json }}
+{% if excalidraw_container_labels_traefik_tls %}
+traefik.http.routers.{{ excalidraw_identifier }}.tls.certResolver={{ excalidraw_container_labels_traefik_tls_certResolver }}
+{% endif %}
+
+traefik.http.services.{{ excalidraw_identifier }}.loadbalancer.server.port={{ excalidraw_container_http_port }}
+{% endif %}
+
+{{ excalidraw_container_labels_additional_labels }}
