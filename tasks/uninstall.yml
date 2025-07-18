@@ -6,28 +6,28 @@
 ---
 - name: Check existence of Excalidraw systemd service
   ansible.builtin.stat:
-    path: "{{ devture_systemd_docker_base_systemd_path }}/{{ excalidraw_identifier }}.service"
-  register: excalidraw_service_stat
+    path: "{{ devture_systemd_docker_base_systemd_path }}/{{ excalidraw_room_identifier }}.service"
+  register: excalidraw_room_service_stat
 
 - name: Uninstall Excalidraw systemd services and files
-  when: excalidraw_service_stat.stat.exists | bool
+  when: excalidraw_room_service_stat.stat.exists | bool
   block:
     - name: Ensure Excalidraw systemd service is stopped
       ansible.builtin.service:
-        name: "{{ excalidraw_identifier }}"
+        name: "{{ excalidraw_room_identifier }}"
         state: stopped
         enabled: false
         daemon_reload: true
 
     - name: Ensure Excalidraw systemd service does not exist
       ansible.builtin.file:
-        path: "{{ devture_systemd_docker_base_systemd_path }}/{{ excalidraw_identifier }}.service"
+        path: "{{ devture_systemd_docker_base_systemd_path }}/{{ excalidraw_room_identifier }}.service"
         state: absent
 
     - name: Ensure Excalidraw container network does not exist via community.docker.docker_network
       when: devture_systemd_docker_base_container_network_creation_method == 'ansible-module'
       community.docker.docker_network:
-        name: "{{ excalidraw_container_network }}"
+        name: "{{ excalidraw_room_container_network }}"
         state: absent
 
     - name: Ensure Excalidraw container network does not exist via ansible.builtin.command
@@ -35,11 +35,11 @@
       ansible.builtin.command:
         cmd: >-
           {{ devture_systemd_docker_base_host_command_docker }} network rm
-          {{ excalidraw_container_network }}
+          {{ excalidraw_room_container_network }}
       register: network_deletion_result
-      changed_when: excalidraw_container_network in network_deletion_result.stdout
+      changed_when: excalidraw_room_container_network in network_deletion_result.stdout
 
     - name: Ensure Excalidraw path does not exist
       ansible.builtin.file:
-        path: "{{ excalidraw_base_path }}"
+        path: "{{ excalidraw_room_base_path }}"
         state: absent

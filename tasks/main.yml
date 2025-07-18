@@ -5,7 +5,7 @@
 
 ---
 - name: Perform Excalidraw installation tasks
-  when: excalidraw_enabled | bool
+  when: excalidraw_room_enabled | bool
   tags:
     - setup-all
     - setup-excalidraw
@@ -20,7 +20,7 @@
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
 
 - name: Perform Excalidraw uninstallation tasks
-  when: not excalidraw_enabled | bool
+  when: not excalidraw_room_enabled | bool
   tags:
     - setup-all
     - setup-excalidraw

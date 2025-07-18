@@ -10,14 +10,14 @@
 # We support various distros, with various versions of Python. Installing additional Python modules can be a hassle.
 # As a workaround, we run `htpasswd` from an Apache container image.
 - name: Run if HTTP Basic authentication is enabled
-  when: excalidraw_basic_auth_enabled | bool
+  when: excalidraw_room_basic_auth_enabled | bool
   block:
     - name: Ensure Apache Docker image is pulled for generating htpasswd file
       community.docker.docker_image:
-        name: "{{ excalidraw_basic_auth_apache_container_image }}"
+        name: "{{ excalidraw_room_basic_auth_apache_container_image }}"
         source: "{{ 'pull' if ansible_version.major > 2 or ansible_version.minor > 7 else omit }}"
-        force_source: "{{ excalidraw_basic_auth_apache_container_image_force_pull if ansible_version.major > 2 or ansible_version.minor >= 8 else omit }}"
-        force: "{{ omit if ansible_version.major > 2 or ansible_version.minor >= 8 else excalidraw_basic_auth_apache_container_image_force_pull }}"
+        force_source: "{{ excalidraw_room_basic_auth_apache_container_image_force_pull if ansible_version.major > 2 or ansible_version.minor >= 8 else omit }}"
+        force: "{{ omit if ansible_version.major > 2 or ansible_version.minor >= 8 else excalidraw_room_basic_auth_apache_container_image_force_pull }}"
       register: result
       retries: "{{ devture_playbook_help_container_retries_count }}"
       delay: "{{ devture_playbook_help_container_retries_delay }}"
@@ -27,32 +27,32 @@
     # as opposed to passing it directly on stdin (which will expose it to other processes on the server).
     - name: Store HTTP Basic authentication password in a temporary file
       ansible.builtin.copy:
-        content: "{{ excalidraw_basic_auth_password }}"
+        content: "{{ excalidraw_room_basic_auth_password }}"
         dest: "/tmp/registry-browser-password"
         mode: "0400"
-        owner: "{{ excalidraw_uid }}"
-        group: "{{ excalidraw_gid }}"
+        owner: "{{ excalidraw_room_uid }}"
+        group: "{{ excalidraw_room_gid }}"
 
     - name: Generate htpasswd from username/password
       ansible.builtin.command:
         cmd: >-
           {{ devture_systemd_docker_base_host_command_docker }} run
           --rm
-          --user={{ excalidraw_uid }}:{{ excalidraw_gid }}
+          --user={{ excalidraw_room_uid }}:{{ excalidraw_room_gid }}
           --cap-drop=ALL
           --network=none
           --read-only
           --mount type=bind,src=/tmp/registry-browser-password,dst=/password,ro
           --entrypoint=/bin/sh
-          {{ excalidraw_basic_auth_apache_container_image }}
+          {{ excalidraw_room_basic_auth_apache_container_image }}
           -c
-          'cat /password | htpasswd -i -n {{ excalidraw_basic_auth_username }}'
+          'cat /password | htpasswd -i -n {{ excalidraw_room_basic_auth_username }}'
       changed_when: true
       register: htpasswd_result
 
     - name: Capture htpasswd password
       ansible.builtin.set_fact:
-        excalidraw_container_label_basicauth_users: "{{ htpasswd_result.stdout }}"
+        excalidraw_room_container_label_basicauth_users: "{{ htpasswd_result.stdout }}"
 
     - name: Delete temporary HTTP Basic authentication password file
       ansible.builtin.file:

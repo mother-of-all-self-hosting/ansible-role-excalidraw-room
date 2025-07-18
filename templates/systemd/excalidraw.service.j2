@@ -7,12 +7,12 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 #}
 
 [Unit]
-Description=Excalidraw ({{ excalidraw_identifier }})
-{% for service in excalidraw_systemd_required_services_list %}
+Description=Excalidraw ({{ excalidraw_room_identifier }})
+{% for service in excalidraw_room_systemd_required_services_list %}
 Requires={{ service }}
 After={{ service }}
 {% endfor %}
-{% for service in excalidraw_systemd_wanted_services_list %}
+{% for service in excalidraw_room_systemd_wanted_services_list %}
 Wants={{ service }}
 {% endfor %}
 DefaultDependencies=no
@@ -20,8 +20,8 @@ DefaultDependencies=no
 [Service]
 Type=simple
 Environment="HOME={{ devture_systemd_docker_base_systemd_unit_home_path }}"
-ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop -t {{ devture_systemd_docker_base_container_stop_grace_time_seconds }} {{ excalidraw_identifier }} 2>/dev/null || true'
-ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ excalidraw_identifier }} 2>/dev/null || true'
+ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop -t {{ devture_systemd_docker_base_container_stop_grace_time_seconds }} {{ excalidraw_room_identifier }} 2>/dev/null || true'
+ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ excalidraw_room_identifier }} 2>/dev/null || true'
 
 {#
   Root access with write permission is required.
@@ -29,38 +29,38 @@ ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_s
 #}
 ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       --rm \
-      --name={{ excalidraw_identifier }} \
+      --name={{ excalidraw_room_identifier }} \
       --log-driver=none \
       --cap-drop=ALL \
       --cap-add=CHOWN \
       --cap-add=SETGID \
       --cap-add=SETUID \
-      --network={{ excalidraw_container_network }} \
-      {% if excalidraw_container_http_host_bind_port %}
-      -p {{ excalidraw_container_http_host_bind_port }}:{{ excalidraw_container_http_port }} \
+      --network={{ excalidraw_room_container_network }} \
+      {% if excalidraw_room_container_http_host_bind_port %}
+      -p {{ excalidraw_room_container_http_host_bind_port }}:{{ excalidraw_room_container_http_port }} \
       {% endif %}
-      --env-file={{ excalidraw_base_path }}/env \
-      --label-file={{ excalidraw_base_path }}/labels \
-      {% for volume in excalidraw_container_additional_volumes %}
+      --env-file={{ excalidraw_room_base_path }}/env \
+      --label-file={{ excalidraw_room_base_path }}/labels \
+      {% for volume in excalidraw_room_container_additional_volumes %}
       --mount type={{ volume.type | default('bind' if '/' in volume.src else 'volume') }},src={{ volume.src }},dst={{ volume.dst }}{{ (',' + volume.options) if volume.options else '' }} \
       {% endfor %}
-      {% for arg in excalidraw_container_extra_arguments %}
+      {% for arg in excalidraw_room_container_extra_arguments %}
       {{ arg }} \
       {% endfor %}
-      {{ excalidraw_container_image_self_build_name if excalidraw_container_image_self_build else excalidraw_container_image }}
+      {{ excalidraw_room_container_image_self_build_name if excalidraw_room_container_image_self_build else excalidraw_room_container_image }}
 
-{% for network in excalidraw_container_additional_networks %}
-ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network connect {{ network }} {{ excalidraw_identifier }}
+{% for network in excalidraw_room_container_additional_networks %}
+ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network connect {{ network }} {{ excalidraw_room_identifier }}
 {% endfor %}
 
-ExecStart={{ devture_systemd_docker_base_host_command_docker }} start --attach {{ excalidraw_identifier }}
+ExecStart={{ devture_systemd_docker_base_host_command_docker }} start --attach {{ excalidraw_room_identifier }}
 
-ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop -t {{ devture_systemd_docker_base_container_stop_grace_time_seconds }} {{ excalidraw_identifier }} 2>/dev/null || true'
-ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ excalidraw_identifier }} 2>/dev/null || true'
+ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop -t {{ devture_systemd_docker_base_container_stop_grace_time_seconds }} {{ excalidraw_room_identifier }} 2>/dev/null || true'
+ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ excalidraw_room_identifier }} 2>/dev/null || true'
 
 Restart=always
 RestartSec=30
-SyslogIdentifier={{ excalidraw_identifier }}
+SyslogIdentifier={{ excalidraw_room_identifier }}
 
 [Install]
 WantedBy=multi-user.target
