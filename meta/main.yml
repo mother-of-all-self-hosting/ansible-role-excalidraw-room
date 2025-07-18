@@ -2,9 +2,9 @@
 galaxy_info:
   author: Suguru Hirahara
   company: progressiv
-  role_name: excalidraw
+  role_name: excalidraw_room
   namespace: progressiv
-  description: Excalidraw
+  description: Excalidraw collaboration server
   platforms:
     - name: Debian
       versions:

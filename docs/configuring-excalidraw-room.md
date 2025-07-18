@@ -16,24 +16,24 @@ SPDX-FileCopyrightText: 2024 - 2025 Suguru Hirahara
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
-# Setting up Excalidraw
+# Setting up Excalidraw collaboration server
 
-This is an [Ansible](https://www.ansible.com/) role which installs the [Excalidraw](https://excalidraw.com/) client to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
+This is an [Ansible](https://www.ansible.com/) role which installs an [example collaboration server](https://github.com/excalidraw/excalidraw-room) for [Excalidraw](https://excalidraw.com/) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
 
-Excalidraw is a free and open source virtual whiteboard for sketching hand-drawn like diagrams. It saves data locally on the browser, and the data is end-to-end encrypted.
+It enables to self-host the collaboration server for your Excalidraw's instance, which by default is configured to connect to the Excalidraw's server at `oss-collab.excalidraw.com`.
 
-See the project's [documentation](https://docs.excalidraw.com/) to learn what it does and why it might be useful to you.
+See the project's [documentation](https://github.com/excalidraw/excalidraw-room/blob/master/README.md) to learn what it does and why it might be useful to you.
 
 ## Adjusting the playbook configuration
 
-To enable the client with this role, add the following configuration to your `vars.yml` file.
+To enable the server with this role, add the following configuration to your `vars.yml` file.
 
 **Note**: the path should be something like `inventory/host_vars/mash.example.com/vars.yml` if you use the [MASH Ansible playbook](https://github.com/mother-of-all-self-hosting/mash-playbook).
 
 ```yaml
 ########################################################################
 #                                                                      #
-# excalidraw                                                           #
+# excalidraw_room                                                      #
 #                                                                      #
 ########################################################################
 
@@ -41,14 +41,14 @@ excalidraw_room_enabled: true
 
 ########################################################################
 #                                                                      #
-# /excalidraw                                                          #
+# /excalidraw_room                                                     #
 #                                                                      #
 ########################################################################
 ```
 
 ### Set the hostname
 
-To enable the client you need to set the hostname as well. To do so, add the following configuration to your `vars.yml` file. Make sure to replace `example.com` with your own value.
+To enable the server you need to set the hostname as well. To do so, add the following configuration to your `vars.yml` file. Make sure to replace `example.com` with your own value.
 
 ```yaml
 excalidraw_room_hostname: "example.com"
@@ -56,19 +56,7 @@ excalidraw_room_hostname: "example.com"
 
 After adjusting the hostname, make sure to adjust your DNS records to point the domain to your server.
 
-**Note**: hosting Excalidraw client under a subpath (by configuring the `excalidraw_room_path_prefix` variable) does not seem to be possible due to Excalidraw's technical limitations.
-
-### Password-protect the instance (optional)
-
-By default the instance is public and accessible to anyone. You can protect it with HTTP Basic authentication by adding the following configuration to your `vars.yml` file:
-
-```yaml
-excalidraw_room_basic_auth_enabled: true
-excalidraw_room_basic_auth_username: YOUR_USERNAME_HERE
-excalidraw_room_basic_auth_password: YOUR_PASSWORD_HERE
-```
-
-Replace `YOUR_USERNAME_HERE` and `YOUR_PASSWORD_HERE` with your own values. For `excalidraw_room_basic_auth_password`, generating a strong one is preferred (e.g. `pwgen -s 64 1`).
+**Note**: hosting Excalidraw collaboration server client under a subpath (by configuring the `excalidraw_room_path_prefix` variable) does not seem to be possible due to Excalidraw collaboration server's technical limitations.
 
 ### Extending the configuration
 
@@ -90,10 +78,13 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 
 ## Usage
 
-After running the command for installation, the Excalidraw client becomes available at the specified hostname like `https://example.com`.
+After running the command for installation, the Excalidraw collaboration server becomes available at the specified hostname like `https://example.com`.
 
->[!NOTE]
-> At the moment, self-hosting your own instance doesn't support sharing or collaboration features (see [this section](https://docs.excalidraw.com/docs/introduction/development#self-hosting) on the official documentation).
+### Build your Excalidraw instance
+
+To use the collaboration server, it is necessary for you to build and install your Excalidraw instance, after setting the hostname of the server to `VITE_APP_WS_SERVER_URL` on its [`.env.production`](https://github.com/excalidraw/excalidraw/blob/master/.env.production).
+
+If you are looking for an Ansible role for installing it on Docker, you can check out [this role (ansible-role-excalidraw)](https://github.com/mother-of-all-self-hosting/ansible-role-excalidraw) maintained by the [Mother-of-All-Self-Hosting (MASH)](https://github.com/mother-of-all-self-hosting) team.
 
 ## Troubleshooting
 

@@ -7,7 +7,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 #}
 
 [Unit]
-Description=Excalidraw ({{ excalidraw_room_identifier }})
+Description=Excalidraw collaboration server ({{ excalidraw_room_identifier }})
 {% for service in excalidraw_room_systemd_required_services_list %}
 Requires={{ service }}
 After={{ service }}

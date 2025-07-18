@@ -14,11 +14,6 @@ traefik.docker.network={{ excalidraw_room_container_labels_traefik_docker_networ
 
 {% set middlewares = [] %}
 
-{% if excalidraw_room_basic_auth_enabled %}
-traefik.http.middlewares.{{ excalidraw_room_identifier }}-auth.basicauth.users={{ excalidraw_room_container_label_basicauth_users }}
-{% set middlewares = middlewares + [excalidraw_room_identifier + '-auth@docker'] %}
-{% endif %}
-
 {% if excalidraw_room_container_labels_traefik_path_prefix != '/' %}
 traefik.http.middlewares.{{ excalidraw_room_identifier }}-slashless-redirect.redirectregex.regex=({{ excalidraw_room_container_labels_traefik_path_prefix | quote }})$
 traefik.http.middlewares.{{ excalidraw_room_identifier }}-slashless-redirect.redirectregex.replacement=${1}/

@@ -4,26 +4,24 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Perform Excalidraw installation tasks
+- name: Perform Excalidraw collaboration server installation tasks
   when: excalidraw_room_enabled | bool
   tags:
     - setup-all
-    - setup-excalidraw
+    - setup-excalidraw-room
     - install-all
-    - install-excalidraw
+    - install-excalidraw-room
   block:
-    - name: Validate Excalidraw configuration
+    - name: Validate Excalidraw collaboration server configuration
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
-    - name: Prepare HTTP Basic authentication for Excalidraw
-      ansible.builtin.include_tasks: "{{ role_path }}/tasks/prepare_basic_auth.yml"
-    - name: Install Excalidraw
+    - name: Install Excalidraw collaboration server
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
 
-- name: Perform Excalidraw uninstallation tasks
+- name: Perform Excalidraw collaboration server uninstallation tasks
   when: not excalidraw_room_enabled | bool
   tags:
     - setup-all
-    - setup-excalidraw
+    - setup-excalidraw-room
   block:
-    - name: Uninstall Excalidraw
+    - name: Uninstall Excalidraw collaboration server
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/uninstall.yml"

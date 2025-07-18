@@ -7,50 +7,37 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-# Project source code URL: https://github.com/excalidraw/excalidraw
+# Project source code URL: https://github.com/excalidraw/excalidraw-room
 
 excalidraw_room_enabled: true
 
-excalidraw_room_identifier: excalidraw
+excalidraw_room_identifier: excalidraw-room
 excalidraw_room_base_path: "/{{ excalidraw_room_identifier }}"
-
-# Only "latest" tag is available
-excalidraw_room_version: latest
-
-# renovate: datasource=docker depName=httpd
-excalidraw_room_basic_auth_apache_version: 2.4.57-alpine3.17
 
 excalidraw_room_uid: ''
 excalidraw_room_gid: ''
 
-# The hostname at which Excalidraw is served.
+# The hostname at which Excalidraw collaboration server is served.
 excalidraw_room_hostname: ''
 
 excalidraw_room_scheme: https
 
-# The path at which Excalidraw is exposed.
+# The path at which Excalidraw collaboration server is exposed.
 # This value must either be `/` or not end with a slash (e.g. `/excalidraw`).
 excalidraw_room_path_prefix: /
 
-excalidraw_room_container_image: "{{ excalidraw_room_container_image_registry_prefix }}excalidraw/excalidraw:{{ excalidraw_room_container_image_tag }}"
-excalidraw_room_container_image_tag: "{{ excalidraw_room_version }}"
+excalidraw_room_container_image: ""
+excalidraw_room_container_image_tag: ""
 excalidraw_room_container_image_registry_prefix: "{{ excalidraw_room_container_image_registry_prefix_upstream }}"
 excalidraw_room_container_image_registry_prefix_upstream: "{{ excalidraw_room_container_image_registry_prefix_upstream_default }}"
-excalidraw_room_container_image_registry_prefix_upstream_default: docker.io/
+excalidraw_room_container_image_registry_prefix_upstream_default: ""
 excalidraw_room_container_image_force_pull: "{{ excalidraw_room_container_image.endswith(':latest') }}"
 
-excalidraw_room_container_image_self_build: false
-excalidraw_room_container_image_self_build_name: "excalidraw/excalidraw:{{ excalidraw_room_container_image_self_build_repo_version }}"
-excalidraw_room_container_image_self_build_repo: "https://github.com/excalidraw/excalidraw.git"
-excalidraw_room_container_image_self_build_repo_version: "{{ excalidraw_room_version if excalidraw_room_version != 'latest' else 'master' }}"
+excalidraw_room_container_image_self_build: true
+excalidraw_room_container_image_self_build_name: "excalidraw/excalidraw-room:{{ excalidraw_room_container_image_self_build_repo_version }}"
+excalidraw_room_container_image_self_build_repo: "https://github.com/excalidraw/excalidraw-room.git"
+excalidraw_room_container_image_self_build_repo_version: "master"
 excalidraw_room_container_image_self_build_src_files_path: "{{ excalidraw_room_base_path }}/docker-src"
-
-excalidraw_room_basic_auth_apache_container_image: "{{ excalidraw_room_basic_auth_apache_container_image_registry_prefix }}httpd:{{ excalidraw_room_basic_auth_apache_container_image_tag }}"
-excalidraw_room_basic_auth_apache_container_image_tag: "{{ excalidraw_room_basic_auth_apache_version }}"
-excalidraw_room_basic_auth_apache_container_image_registry_prefix: "{{ excalidraw_room_basic_auth_apache_container_image_registry_prefix_upstream }}"
-excalidraw_room_basic_auth_apache_container_image_registry_prefix_upstream: "{{ excalidraw_room_basic_auth_apache_container_image_registry_prefix_upstream_default }}"
-excalidraw_room_basic_auth_apache_container_image_registry_prefix_upstream_default: docker.io/
-excalidraw_room_basic_auth_apache_container_image_force_pull: "{{ excalidraw_room_basic_auth_apache_container_image.endswith(':latest') }}"
 
 # Controls whether the container exposes its HTTP port (tcp/80 in the container).
 #
@@ -61,7 +48,7 @@ excalidraw_room_container_http_host_bind_port: ''
 excalidraw_room_container_network: "{{ excalidraw_room_identifier }}"
 
 # The port number in the container
-excalidraw_room_container_http_port: 80
+excalidraw_room_container_http_port: 443
 
 # A list of additional container networks that the container would be connected to.
 # The role does not create these networks, so make sure they already exist.
@@ -165,23 +152,14 @@ excalidraw_room_floc_optout_enabled: true
 # See: `excalidraw_room_http_header_strict_transport_security`
 excalidraw_room_hsts_preload_enabled: false
 
-# List of systemd services that the Excalidraw systemd service depends on
+# List of systemd services that the Excalidraw collaboration server systemd service depends on
 excalidraw_room_systemd_required_services_list: "{{ excalidraw_room_systemd_required_services_list_default + excalidraw_room_systemd_required_services_list_auto + excalidraw_room_systemd_required_services_list_custom }}"
-excalidraw_room_systemd_required_services_list_default: "{{ [devture_systemd_docker_base_docker_service_name] if devture_systemd_docker_base_docker_service_name else [] }}"
+excalidraw_room_systemd_required_services_list_default: []
 excalidraw_room_systemd_required_services_list_auto: []
 excalidraw_room_systemd_required_services_list_custom: []
 
-# List of systemd services that the Excalidraw systemd service wants
+# List of systemd services that the Excalidraw collaboration server systemd service wants
 excalidraw_room_systemd_wanted_services_list: []
-
-# excalidraw_room_basic_auth_enabled controls whether HTTP Basic authentication is enabled.
-# Also see `excalidraw_room_container_label_basicauth_users`.
-excalidraw_room_basic_auth_enabled: false
-excalidraw_room_basic_auth_username: ''
-excalidraw_room_basic_auth_password: ''
-# excalidraw_room_container_label_basicauth_users is populated at runtime based on
-# excalidraw_room_basic_auth_username and excalidraw_room_basic_auth_password
-excalidraw_room_container_label_basicauth_users: ''
 
 # Additional environment variables.
 excalidraw_room_environment_variables_additional_variables: ''
