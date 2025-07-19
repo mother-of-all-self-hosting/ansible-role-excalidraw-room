@@ -24,6 +24,9 @@ It enables to self-host the collaboration server for your Excalidraw's instance,
 
 See the project's [documentation](https://github.com/excalidraw/excalidraw-room/blob/master/README.md) to learn what it does and why it might be useful to you.
 
+>[!NOTE]
+> The role is configured to build the Docker image by default, as it is not provided by the upstream project. Before proceeding, make sure that the machine which you are going to run the Ansible commands against has sufficient computing power to build it.
+
 ## Adjusting the playbook configuration
 
 To enable the server with this role, add the following configuration to your `vars.yml` file.
