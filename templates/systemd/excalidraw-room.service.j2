@@ -24,17 +24,15 @@ ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_s
 ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ excalidraw_room_identifier }} 2>/dev/null || true'
 
 {#
-  Root access with write permission is required.
-  See: https://github.com/excalidraw/excalidraw/blob/master/Dockerfile
+  Write permission is required for Yarn commands.
+  See: https://github.com/excalidraw/excalidraw-room/blob/master/Dockerfile
 #}
 ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       --rm \
       --name={{ excalidraw_room_identifier }} \
       --log-driver=none \
+      --user={{ excalidraw_room_uid }}:{{ excalidraw_room_gid }} \
       --cap-drop=ALL \
-      --cap-add=CHOWN \
-      --cap-add=SETGID \
-      --cap-add=SETUID \
       --network={{ excalidraw_room_container_network }} \
       {% if excalidraw_room_container_http_host_bind_port %}
       -p {{ excalidraw_room_container_http_host_bind_port }}:{{ excalidraw_room_container_http_port }} \
