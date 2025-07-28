@@ -25,11 +25,18 @@ traefik.http.middlewares.{{ excalidraw_room_identifier }}-strip-prefix.strippref
 {% set middlewares = middlewares + [excalidraw_room_identifier + '-strip-prefix'] %}
 {% endif %}
 
+{% if excalidraw_room_container_labels_traefik_additional_request_headers.keys() | length > 0 %}
+{% for name, value in excalidraw_room_container_labels_traefik_additional_request_headers.items() %}
+traefik.http.middlewares.{{ excalidraw_room_identifier }}-add-request-headers.headers.customrequestheaders.{{ name }}={{ value }}
+{% endfor %}
+{% set middlewares = middlewares + [excalidraw_room_identifier + '-add-request-headers'] %}
+{% endif %}
+
 {% if excalidraw_room_container_labels_traefik_additional_response_headers.keys() | length > 0 %}
 {% for name, value in excalidraw_room_container_labels_traefik_additional_response_headers.items() %}
-traefik.http.middlewares.{{ excalidraw_room_identifier }}-add-headers.headers.customresponseheaders.{{ name }}={{ value }}
+traefik.http.middlewares.{{ excalidraw_room_identifier }}-add-response-headers.headers.customresponseheaders.{{ name }}={{ value }}
 {% endfor %}
-{% set middlewares = middlewares + [excalidraw_room_identifier + '-add-headers'] %}
+{% set middlewares = middlewares + [excalidraw_room_identifier + '-add-response-headers'] %}
 {% endif %}
 
 traefik.http.routers.{{ excalidraw_room_identifier }}.rule={{ excalidraw_room_container_labels_traefik_rule }}
