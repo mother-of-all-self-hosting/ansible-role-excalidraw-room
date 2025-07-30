@@ -34,5 +34,5 @@
     - name: Fail if excalidraw_room_container_labels_traefik_path_prefix ends with a slash
       ansible.builtin.fail:
         msg: >-
-          excalidraw_room_container_labels_traefik_path_prefix (`{{ excalidraw_room_container_labels_traefik_path_prefix }}`) must either be `/` or not end with a slash (e.g. `/excalidraw`).
+          excalidraw_room_container_labels_traefik_path_prefix (`{{ excalidraw_room_container_labels_traefik_path_prefix }}`) must either be `/` or not end with a slash (e.g. `/excalidraw-room`).
       when: "excalidraw_room_container_labels_traefik_path_prefix != '/' and excalidraw_room_container_labels_traefik_path_prefix[-1] == '/'"
