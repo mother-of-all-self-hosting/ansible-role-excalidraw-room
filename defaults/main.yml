@@ -167,7 +167,10 @@ excalidraw_room_systemd_required_services_list_auto: []
 excalidraw_room_systemd_required_services_list_custom: []
 
 # List of systemd services that the Excalidraw collaboration server systemd service wants
-excalidraw_room_systemd_wanted_services_list: []
+excalidraw_room_systemd_wanted_services_list: "{{ excalidraw_room_systemd_wanted_services_list_default + excalidraw_room_systemd_wanted_services_list_auto + excalidraw_room_systemd_wanted_services_list_custom }}"
+excalidraw_room_systemd_wanted_services_list_default: []
+excalidraw_room_systemd_wanted_services_list_auto: []
+excalidraw_room_systemd_wanted_services_list_custom: []
 
 # Additional environment variables.
 excalidraw_room_environment_variables_additional_variables: ''
