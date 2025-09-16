@@ -96,7 +96,7 @@ excalidraw_room_container_labels_traefik_additional_response_headers_auto: |
     | combine ({'X-XSS-Protection': excalidraw_room_http_header_xss_protection} if excalidraw_room_http_header_xss_protection else {})
     | combine ({'X-Content-Type-Options': excalidraw_room_http_header_content_type_options} if excalidraw_room_http_header_content_type_options else {})
     | combine ({'Content-Security-Policy': excalidraw_room_http_header_content_security_policy} if excalidraw_room_http_header_content_security_policy else {})
-    | combine ({'Permission-Policy': excalidraw_room_http_header_content_permission_policy} if excalidraw_room_http_header_content_permission_policy else {})
+    | combine ({'Permissions-Policy': excalidraw_room_http_header_permissions_policy} if excalidraw_room_http_header_permissions_policy else {})
     | combine ({'Strict-Transport-Security': excalidraw_room_http_header_strict_transport_security} if excalidraw_room_http_header_strict_transport_security and excalidraw_room_container_labels_traefik_tls else {})
   }}
 excalidraw_room_container_labels_traefik_additional_response_headers_custom: {}
@@ -129,9 +129,9 @@ excalidraw_room_http_header_content_type_options: nosniff
 # See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy
 excalidraw_room_http_header_content_security_policy: frame-ancestors 'self'
 
-# Specifies the value of the `Permission-Policy` header.
-# See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permission-Policy
-excalidraw_room_http_header_content_permission_policy: "{{ 'interest-cohort=()' if excalidraw_room_floc_optout_enabled else '' }}"
+# Specifies the value of the `Permissions-Policy` header.
+# See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy
+excalidraw_room_http_header_permissions_policy: "{{ 'interest-cohort=()' if excalidraw_room_floc_optout_enabled else '' }}"
 
 # Specifies the value of the `Strict-Transport-Security` header.
 # See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
@@ -145,7 +145,7 @@ excalidraw_room_http_header_strict_transport_security: "max-age=31536000; includ
 # - https://amifloced.org/
 #
 # Of course, a better solution is to just stop using browsers (like Chrome), which participate in such tracking practices.
-# See: `excalidraw_room_content_permission_policy`
+# See: `excalidraw_room_http_header_permissions_policy`
 excalidraw_room_floc_optout_enabled: true
 
 # Controls if HSTS preloading is enabled
