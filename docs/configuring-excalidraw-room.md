@@ -93,4 +93,4 @@ If you are looking for an Ansible role for installing it on Docker, you can chec
 
 ### Check the service's logs
 
-You can find the logs in [systemd-journald](https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html) by logging in to the server with SSH and running `journalctl -fu excalidraw` (or how you/your playbook named the service, e.g. `mash-excalidraw`).
+You can find the logs in [systemd-journald](https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html) by logging in to the server with SSH and running `journalctl -fu excalidraw-room` (or how you/your playbook named the service, e.g. `mash-excalidraw-room`).

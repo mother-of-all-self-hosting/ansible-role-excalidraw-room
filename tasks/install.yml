@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Ensure Excalidraw collaboration server paths exist
+- name: Ensure Excalidraw collaboration server path exists
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
