@@ -14,11 +14,11 @@ excalidraw_room_enabled: true
 excalidraw_room_identifier: excalidraw-room
 excalidraw_room_base_path: "/{{ excalidraw_room_identifier }}"
 
-excalidraw_room_uid: ''
-excalidraw_room_gid: ''
+excalidraw_room_uid: ""
+excalidraw_room_gid: ""
 
 # The hostname at which Excalidraw collaboration server is served.
-excalidraw_room_hostname: ''
+excalidraw_room_hostname: ""
 
 excalidraw_room_scheme: https
 
@@ -42,7 +42,7 @@ excalidraw_room_container_image_self_build_src_files_path: "{{ excalidraw_room_b
 # Controls whether the container exposes its HTTP port (tcp/80 in the container).
 #
 # Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:2586"), or empty string to not expose.
-excalidraw_room_container_http_host_bind_port: ''
+excalidraw_room_container_http_host_bind_port: ""
 
 # The base container network. It will be auto-created by this role if it doesn't exist already.
 excalidraw_room_container_network: "{{ excalidraw_room_identifier }}"
@@ -108,7 +108,7 @@ excalidraw_room_container_labels_traefik_additional_response_headers_custom: {}
 # excalidraw_room_container_labels_additional_labels: |
 #   my.label=1
 #   another.label="here"
-excalidraw_room_container_labels_additional_labels: ''
+excalidraw_room_container_labels_additional_labels: ""
 
 # A list of extra arguments to pass to the container (`docker run` command)
 excalidraw_room_container_extra_arguments: []
@@ -173,4 +173,4 @@ excalidraw_room_systemd_wanted_services_list_auto: []
 excalidraw_room_systemd_wanted_services_list_custom: []
 
 # Additional environment variables.
-excalidraw_room_environment_variables_additional_variables: ''
+excalidraw_room_environment_variables_additional_variables: ""
