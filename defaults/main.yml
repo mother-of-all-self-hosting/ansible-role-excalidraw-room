@@ -108,7 +108,9 @@ excalidraw_room_container_labels_traefik_additional_response_headers_custom: {}
 # excalidraw_room_container_labels_additional_labels: |
 #   my.label=1
 #   another.label="here"
-excalidraw_room_container_labels_additional_labels: ""
+excalidraw_room_container_labels_additional_labels: "{{ excalidraw_room_container_labels_additional_labels_auto | combine(excalidraw_room_container_labels_additional_labels_custom) }}"
+excalidraw_room_container_labels_additional_labels_auto: {}
+excalidraw_room_container_labels_additional_labels_custom: {}
 
 # A list of extra arguments to pass to the container (`docker run` command)
 excalidraw_room_container_extra_arguments: "{{ excalidraw_room_container_extra_arguments_auto + excalidraw_room_container_extra_arguments_custom }}"
