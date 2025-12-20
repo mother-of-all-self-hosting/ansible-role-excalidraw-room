@@ -172,5 +172,8 @@ excalidraw_room_systemd_wanted_services_list_default: []
 excalidraw_room_systemd_wanted_services_list_auto: []
 excalidraw_room_systemd_wanted_services_list_custom: []
 
+# Specify the timezone
+excalidraw_room_environment_variables_tz: UTC
+
 # Additional environment variables.
 excalidraw_room_environment_variables_additional_variables: ""
