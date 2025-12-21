@@ -22,7 +22,7 @@ excalidraw_room_hostname: ""
 
 excalidraw_room_scheme: https
 
-# The path at which Excalidraw collaboration server is exposed.
+# The path at which Excalidraw collaboration server is served.
 # This value must either be `/` or not end with a slash (e.g. `/excalidraw-room`).
 excalidraw_room_path_prefix: /
 
