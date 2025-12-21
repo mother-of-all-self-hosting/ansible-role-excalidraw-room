@@ -113,7 +113,7 @@ excalidraw_room_container_labels_additional_labels: "{{ excalidraw_room_containe
 excalidraw_room_container_labels_additional_labels_auto: {}
 excalidraw_room_container_labels_additional_labels_custom: {}
 
-# A list of extra arguments to pass to the container (`docker run` command)
+# A list of extra arguments to pass to the container (`docker create` command)
 excalidraw_room_container_extra_arguments: "{{ excalidraw_room_container_extra_arguments_auto + excalidraw_room_container_extra_arguments_custom }}"
 excalidraw_room_container_extra_arguments_auto: []
 excalidraw_room_container_extra_arguments_custom: []
