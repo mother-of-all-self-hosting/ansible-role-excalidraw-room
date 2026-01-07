@@ -56,4 +56,6 @@ traefik.http.routers.{{ excalidraw_room_identifier }}.tls.certResolver={{ excali
 traefik.http.services.{{ excalidraw_room_identifier }}.loadbalancer.server.port={{ excalidraw_room_container_http_port }}
 {% endif %}
 
-{{ excalidraw_room_container_labels_additional_labels }}
+{% for arg in excalidraw_room_container_labels_additional_labels %}
+{{ arg }}
+{% endfor %}
