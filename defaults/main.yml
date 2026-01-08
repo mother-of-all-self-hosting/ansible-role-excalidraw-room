@@ -106,7 +106,7 @@ excalidraw_room_container_labels_traefik_additional_response_headers_custom: {}
 # To add your own custom labels, use `excalidraw_room_container_labels_additional_labels_custom`
 #
 # Example:
-# excalidraw_room_container_labels_additional_labels_custom: |
+# excalidraw_room_container_labels_additional_labels_custom:
 #   - my.label=1
 #   - another.label="here"
 excalidraw_room_container_labels_additional_labels: "{{ excalidraw_room_container_labels_additional_labels_auto + excalidraw_room_container_labels_additional_labels_custom }}"
