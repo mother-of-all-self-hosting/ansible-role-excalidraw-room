@@ -49,7 +49,7 @@
       retries: "{{ devture_playbook_help_container_retries_count }}"
       delay: "{{ devture_playbook_help_container_retries_delay }}"
       until: excalidraw_room_container_image_pull_result is not failed
-      changed_when: "'Downloaded newer image' in result.stdout"
+      changed_when: "'Downloaded newer image' in excalidraw_room_container_image_pull_result.stdout"
 
 - name: Run if self-building of Excalidraw collaboration server container image is enabled
   when: "excalidraw_room_container_image_self_build | bool"
