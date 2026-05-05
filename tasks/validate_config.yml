@@ -12,6 +12,7 @@
   when: "lookup('ansible.builtin.varnames', ('^' + item.old + '$'), wantlist=True) | length > 0"
   with_items:
     - { "old": "excalidraw_room_http_header_content_permission_policy", "new": "excalidraw_room_http_header_permissions_policy" }
+    - { "old": "excalidraw_room_container_image_force_pull", "new": "<removed> (the new community.docker.docker_image_pull module handles this natively)" }
 
 - name: Fail if required Excalidraw collaboration server settings not defined
   ansible.builtin.fail:

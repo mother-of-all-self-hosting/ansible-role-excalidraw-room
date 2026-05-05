@@ -32,7 +32,6 @@ excalidraw_room_container_image_tag: ""
 excalidraw_room_container_image_registry_prefix: "{{ excalidraw_room_container_image_registry_prefix_upstream }}"
 excalidraw_room_container_image_registry_prefix_upstream: "{{ excalidraw_room_container_image_registry_prefix_upstream_default }}"
 excalidraw_room_container_image_registry_prefix_upstream_default: ""
-excalidraw_room_container_image_force_pull: "{{ excalidraw_room_container_image.endswith(':latest') }}"
 
 excalidraw_room_container_image_self_build: true
 excalidraw_room_container_image_self_build_name: "excalidraw/excalidraw-room:{{ excalidraw_room_container_image_self_build_repo_version }}"
