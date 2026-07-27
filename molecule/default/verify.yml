@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: 2026 Suguru Hirahara
+# SPDX-FileCopyrightText: 2026 spatterlight
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Verify Excalidraw collaboration server systemd service
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Wait for Excalidraw collaboration server service to become active (up to 180s)
+      ansible.builtin.systemd:
+        name: excalidraw-room.service
+      register: excalidraw_room_service
+      until: excalidraw_room_service.status.ActiveState == 'active'
+      retries: 36
+      delay: 5
+
+    - name: Assert Excalidraw collaboration server service is active
+      ansible.builtin.assert:
+        that: excalidraw_room_service.status.ActiveState == 'active'
+        fail_msg: "excalidraw-room.service not active ({{ excalidraw_room_service.status.ActiveState }})"
+        success_msg: "excalidraw-room.service is active"
+
+    - name: Retrieve Excalidraw collaboration server service log for debugging
+      when: excalidraw_room_debug_service_enabled | bool
+      ansible.builtin.command:
+        cmd: journalctl -xeu excalidraw-room.service
+      changed_when: false
+
+    - name: Wait for Excalidraw collaboration server HTTP endpoint to respond (up to 10m)
+      ansible.builtin.uri:
+        url: "http://localhost:80/"
+        method: GET
+        status_code: [200, 302]
+        follow_redirects: none
+      register: excalidraw_room_endpoint
+      until: excalidraw_room_endpoint.status in [200, 302]
+      retries: 120
+      delay: 5
+
+    - name: Assert Excalidraw collaboration server HTTP endpoint responds
+      ansible.builtin.assert:
+        that: excalidraw_room_endpoint.status in [200, 302]
+        fail_msg: "Excalidraw collaboration server did not respond as expected ({{ excalidraw_room_endpoint.status | default('no response') }})"
+        success_msg: "Excalidraw collaboration server responded with {{ excalidraw_room_endpoint.status }}"
+
+    - name: Show Excalidraw collaboration server systemd service status summary
+      ansible.builtin.debug:
+        msg:
+          - "Excalidraw collaboration server systemd: {{ excalidraw_room_service.status.ActiveState }}"
+          - "Excalidraw collaboration server HTTP: {{ excalidraw_room_endpoint.status }}"
