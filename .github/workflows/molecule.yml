@@ -1,3 +1,4 @@
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2026 spatterlight
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
@@ -5,12 +6,35 @@
 ---
 name: molecule
 
-on: [push, pull_request]  # yamllint disable-line rule:truthy
+on:  # yamllint disable-line rule:truthy
+  push:
+    paths-ignore:
+      - "docs/**"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "LICENSE"
+      - "LICENSES/**"
+      - "REUSE.toml"
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "LICENSE"
+      - "LICENSES/**"
+      - "REUSE.toml"
+  workflow_dispatch:
 
 jobs:
   molecule:
     name: Run Molecule scenario '${{ matrix.scenario }}' on ${{ matrix.distro }}
     runs-on: ubuntu-latest
+
+    # Same-repository pull requests already run via the push event;
+    # run pull_request jobs only for pull requests from forks.
+    if: >-
+      github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name != github.repository
 
     strategy:
       matrix:
@@ -19,6 +43,16 @@ jobs:
           - debian13
         scenario:
           - default
+          - default-selfbuild
+        # The self-build scenario compiles the collaboration server with Node inside a container
+        # and runs the result in another one. Neither step cares which distribution the Docker
+        # daemon happens to run on, so building it a second time tests nothing the first run has
+        # not. It is not gated on version bumps either: it is the scenario that covers the one
+        # dependency Renovate proposes updates for here, so it has to run on every push for
+        # automerge to mean anything.
+        exclude:
+          - distro: debian13
+            scenario: default-selfbuild
       fail-fast: false
 
     env:
@@ -47,7 +81,7 @@ jobs:
         uses: actions/cache@v6.1.0
         with:
           path: ~/.ansible/collections
-          key: ansible-collections-${{ hashFiles('excalidraw-room/molecule/default/requirements.yml') }}
+          key: ansible-collections-${{ hashFiles('excalidraw-room/molecule/*/requirements.yml') }}
 
       - name: Run Molecule
         working-directory: excalidraw-room
