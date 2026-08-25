@@ -52,6 +52,23 @@ excalidraw_room_container_image_self_build_repo: "https://github.com/excalidraw/
 excalidraw_room_container_image_self_build_repo_version: "{{ excalidraw_room_version if excalidraw_room_version != 'latest' else 'master' }}"
 excalidraw_room_container_image_self_build_src_files_path: "{{ excalidraw_room_base_path }}/docker-src"
 
+# The container image that the self-built Excalidraw collaboration server image is built on.
+#
+# The collaboration server's own Dockerfile says `FROM node:12-alpine`. Node.js 12 went out of
+# support in April 2022 and the pre-built image on Docker Hub has not been rebuilt since 2023,
+# so anyone running it is running a Node.js and an Alpine that stopped receiving security fixes
+# years ago. This role builds the same source on a supported Node.js instead.
+# See `../templates/Dockerfile.j2`.
+#
+# This is pinned to an exact release rather than following `24-alpine` or `lts-alpine`, so that a
+# Node.js major release cannot arrive unannounced on the next image build, and so that Renovate
+# has a version it can propose updates for. Keeping the `-alpine` suffix on the tag is what keeps
+# Renovate proposing Alpine builds rather than Debian ones.
+excalidraw_room_container_image_self_build_base_image: "{{ excalidraw_room_container_image_self_build_base_image_name }}:{{ excalidraw_room_container_image_self_build_base_image_tag }}"
+excalidraw_room_container_image_self_build_base_image_name: docker.io/library/node
+# renovate: datasource=docker depName=node versioning=docker
+excalidraw_room_container_image_self_build_base_image_tag: 24.19.0-alpine
+
 # The base container network. It will be auto-created by this role if it doesn't exist already.
 excalidraw_room_container_network: "{{ excalidraw_room_identifier }}"
 

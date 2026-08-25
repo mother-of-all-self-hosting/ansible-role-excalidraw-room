@@ -1,0 +1,47 @@
+{#
+SPDX-FileCopyrightText: 2026 Slavi Pantaleev
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+#}
+
+{#
+  This replaces the Dockerfile that excalidraw/excalidraw-room ships, which reads
+  `FROM node:12-alpine` and has not been touched since 2021. Node.js 12 left support in April
+  2022, so building the collaboration server the way upstream describes it means shipping a
+  Node.js runtime and an Alpine userland that have been unmaintained for years.
+
+  The application source itself is upstream's, unmodified, and so is the shape of the build.
+  All this changes is what it runs on and how it is started:
+
+  - a supported Node.js, pinned to an exact release so that Renovate can see it and a major
+    version cannot arrive on the next image build by surprise
+  - `--frozen-lockfile`, so that a build fails rather than quietly resolving something other
+    than what yarn.lock names
+  - `node dist/index.js` as the entrypoint instead of `yarn start`. Yarn wants a writable home
+    directory of its own, which is awkward for a container this role runs under an arbitrary
+    unprivileged uid, and it only ever forwarded to this same command anyway.
+
+  There is deliberately no separate build stage. It would not buy anything here: upstream's
+  package.json lists TypeScript, ESLint and Prettier under `dependencies` rather than
+  `devDependencies`, so `yarn install --production` prunes nothing and the runtime image would
+  have to carry the same tree either way.
+#}
+
+FROM {{ excalidraw_room_container_image_self_build_base_image }}
+
+WORKDIR /excalidraw-room
+
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile --non-interactive && yarn cache clean
+
+COPY tsconfig.json ./
+COPY src ./src
+
+{# `src/index.ts` serves this directory through `express.static("public")`, relative to the working directory. #}
+COPY public ./public
+
+RUN yarn build
+
+EXPOSE {{ excalidraw_room_container_http_port }}
+
+CMD ["node", "dist/index.js"]

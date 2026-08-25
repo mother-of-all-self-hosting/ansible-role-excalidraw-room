@@ -23,8 +23,10 @@ Environment="HOME={{ devture_systemd_docker_base_systemd_unit_home_path }}"
 ExecStartPre={{ devture_systemd_docker_base_host_command_sh }} -c '{{ excalidraw_room_container_cleanup_command | trim | replace("\n", " ") }}'
 
 {#
-  Write permission is required for Yarn commands.
-  See: https://github.com/excalidraw/excalidraw-room/blob/master/Dockerfile
+  The root filesystem is left writable on purpose. The pre-built image upstream publishes starts
+  through `yarn start`, and Yarn insists on a writable home directory of its own even when all it
+  does is hand over to `node`. The image this role builds itself runs `node` directly and would not
+  need it - see `../Dockerfile.j2` - but the same unit has to serve both.
 #}
 ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       --rm \

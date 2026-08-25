@@ -61,6 +61,26 @@ After adjusting the hostname, make sure to adjust your DNS records to point the 
 
 **Note**: hosting Excalidraw collaboration server client under a subpath (by configuring the `excalidraw_room_path_prefix` variable) does not seem to be possible due to Excalidraw collaboration server's technical limitations.
 
+### Choosing between building the image and pulling it
+
+The role builds the container image on your server by default. The alternative is the image Excalidraw publishes on Docker Hub, which you can select with:
+
+```yaml
+excalidraw_room_container_image_self_build: false
+```
+
+The two are not equivalent, and building is recommended. The collaboration server publishes no versioned releases at all — no git tags, no releases, and a single usable Docker Hub tag (`latest`) which was last pushed in December 2023, along with the `master` branch it was built from. That is why `excalidraw_room_version` is `latest`. Whichever of the two you choose, "whatever the collaboration server currently is" is what you get.
+
+What differs is the runtime underneath it. The pre-built image was built `FROM node:12-alpine`; Node.js 12 left support in April 2022, so pulling it means running a Node.js and an Alpine userland which stopped receiving security fixes years ago. When building, this role writes its own `Dockerfile` over the one upstream ships and builds the same source on a supported, pinned Node.js instead.
+
+#### Pinning the Node.js that the self-built image uses
+
+The pin is deliberate, so that a new major release of Node.js cannot arrive unannounced on your next image build. Renovate proposes updates to it, and the Molecule test suite asserts that the Node.js which ends up running is the one that is pinned. To choose a different one yourself, set:
+
+```yaml
+excalidraw_room_container_image_self_build_base_image_tag: 24.19.0-alpine
+```
+
 ### Extending the configuration
 
 There are some additional things you may wish to configure about the service.

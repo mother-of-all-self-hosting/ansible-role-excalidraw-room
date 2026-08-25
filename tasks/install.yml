@@ -60,13 +60,45 @@
         force: "yes"
       register: excalidraw_room_git_pull_results
 
+    - name: Ensure Excalidraw collaboration server files for building container image installed
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/{{ item }}.j2"
+        dest: "{{ excalidraw_room_container_image_self_build_src_files_path }}/{{ item }}"
+        mode: "0640"
+        owner: "{{ excalidraw_room_uid }}"
+        group: "{{ excalidraw_room_gid }}"
+        force: true # Overwrite the Dockerfile at https://github.com/excalidraw/excalidraw-room/blob/master/Dockerfile
+      with_items:
+        - .dockerignore
+        - Dockerfile
+      register: excalidraw_room_container_image_self_build_files_result
+
+    # `rebuild: never` means "build only if this image name does not exist yet". The image name is
+    # derived from a git ref (`master` by default) rather than from a version, so it stays the same
+    # while what it should contain changes. Everything that can change the contents is therefore
+    # listed here explicitly.
+    #
+    # `excalidraw_room_git_pull_results.changed` cannot be used in its place: this role writes its
+    # own Dockerfile and .dockerignore over the ones upstream ships, so the checkout always has
+    # local modifications, and `ansible.builtin.git` reports itself as changed whenever it discards
+    # any. That would rebuild the image on every playbook run, which in turn would make
+    # `excalidraw_room_restart_necessary` true and drop every collaboration session in progress.
+    # `before != after` is what actually says whether upstream moved.
     - name: Ensure Excalidraw collaboration server container image is built
       community.docker.docker_image_build:
         name: "{{ excalidraw_room_container_image_self_build_name }}"
         dockerfile: Dockerfile
         path: "{{ excalidraw_room_container_image_self_build_src_files_path }}"
         pull: true
-        rebuild: "{{ 'always' if excalidraw_room_git_pull_results.changed | bool else 'never' }}"
+        rebuild: >-
+          {{
+            'always'
+            if (
+              (excalidraw_room_git_pull_results.before | default(none)) != (excalidraw_room_git_pull_results.after | default(none))
+              or (excalidraw_room_container_image_self_build_files_result.changed | default(false) | bool)
+            )
+            else 'never'
+          }}
       register: excalidraw_room_container_image_build_result
 
 - name: Ensure Excalidraw collaboration server container network is created via community.docker.docker_network
