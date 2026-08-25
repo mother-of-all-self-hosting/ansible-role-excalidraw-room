@@ -43,11 +43,21 @@ pip3 install -r ./molecule/requirements.txt
 
 ## Scenarios
 
-Currently there is one testing scenario available.
+There are two testing scenarios available.
 
 ### `default`
 
-Tests a standard Excalidraw collaboration server installation.
+Tests an installation which uses the pre-built image Excalidraw publishes on Docker Hub (`excalidraw_room_container_image_self_build: false`), with the Traefik labels turned on.
+
+### `default-selfbuild`
+
+Tests an installation which builds the container image itself, which is what the role does by default, with the Traefik labels turned off. This is the scenario which covers the Node.js release that `excalidraw_room_container_image_self_build_base_image_tag` pins — the one dependency Renovate proposes updates for in this repository.
+
+### What both of them check
+
+The collaboration server answers `Excalidraw collaboration server is up :)` on `/` from a two-line Express handler which knows nothing about collaboration, and would keep answering it with Socket.IO entirely broken. So the central check in both scenarios is [`files/excalidraw-room-collaboration-probe.py`](files/excalidraw-room-collaboration-probe.py), which speaks Engine.IO v4 over raw WebSockets with nothing but the Python standard library. It opens two Socket.IO clients, puts them in a room, and requires that a broadcast from one arrives at the other with its binary attachments intact — and that a broadcast addressed to a room nobody is in arrives nowhere.
+
+Both scenarios also pick a port which is none of the ones the collaboration server would bind on its own, and an `Access-Control-Allow-Origin` value which is not the `*` it answers when unconfigured, so that `templates/env.j2` is shown to have been acted upon rather than merely written.
 
 ## Running
 
@@ -68,4 +78,10 @@ MOLECULE_DISTRO=debian13 molecule test --scenario-name default
 
 # Debian 12
 MOLECULE_DISTRO=debian12 molecule test --scenario-name default
+```
+
+The self-build scenario is run the same way:
+
+```bash
+molecule test --scenario-name default-selfbuild
 ```

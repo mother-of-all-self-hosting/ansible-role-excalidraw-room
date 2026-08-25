@@ -1,0 +1,155 @@
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2026 Suguru Hirahara
+# SPDX-FileCopyrightText: 2026 spatterlight
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Verifies the image this role builds itself, which is what it does by default.
+#
+# The collaboration server has no version of its own - no git tags, no releases, and a Docker Hub
+# tag that has stood still since 2023 - so unlike most roles in this fleet there is no upstream
+# version to assert. What this image does have a version of is the Node.js it runs on, because
+# this role replaces the `FROM node:12-alpine` upstream ships with the exact release
+# `excalidraw_room_container_image_self_build_base_image_tag` pins. That pin is the one leaf
+# Renovate proposes updates for in this repository, and this scenario is what gates its automerge:
+# it builds against the bumped base and then makes the running container account for itself.
+
+---
+- name: Verify Excalidraw collaboration server
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Verify that Excalidraw collaboration server works
+      block:
+        - name: Run the shared Excalidraw collaboration server verification tasks
+          ansible.builtin.include_tasks: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/molecule/verify_tasks.yml"
+
+        ########################################################################
+        #                                                                      #
+        # the version that is running                                          #
+        #                                                                      #
+        ########################################################################
+
+        - name: Assert that the image is the one the role built and not one it pulled
+          ansible.builtin.assert:
+            that: excalidraw_room_molecule_container.Config.Image == 'excalidraw/excalidraw-room:master'
+            fail_msg: >-
+              The container runs {{ excalidraw_room_molecule_container.Config.Image }} rather than
+              the locally built excalidraw/excalidraw-room:master
+            success_msg: "The container runs the locally built excalidraw/excalidraw-room:master"
+
+        - name: Ask the running container which Node.js it carries
+          ansible.builtin.command:
+            cmd: docker exec excalidraw-room node --version
+          register: excalidraw_room_node_version
+          changed_when: false
+
+        - name: Read what the running container runs as PID 1
+          ansible.builtin.command:
+            cmd: docker exec excalidraw-room sh -c 'tr "\0" " " < /proc/1/cmdline'
+          register: excalidraw_room_pid1
+          changed_when: false
+
+        # This is the assertion that earns patch automerge. Node.js reports its own release and
+        # nothing else - no base image's number wearing a disguise, no `dev` placeholder, no
+        # value fetched from an API that could come back empty - so a bump of
+        # `excalidraw_room_container_image_self_build_base_image_tag` that did not end up in the
+        # running container fails right here.
+        #
+        # The tag carries an `-alpine` suffix which the version itself does not, hence the trim.
+        # PID 1 is checked alongside it so that the version being reported is the version of the
+        # process actually serving, rather than of some other Node.js that happens to be in the
+        # image: `templates/Dockerfile.j2` starts `node dist/index.js` directly, where the
+        # pre-built image upstream publishes goes through `yarn start`.
+        - name: Assert that the running Node.js is the release defaults/main.yml pins
+          vars:
+            excalidraw_room_molecule_pinned_node: "v{{ excalidraw_room_role_defaults.excalidraw_room_container_image_self_build_base_image_tag | regex_replace('-.*$', '') }}"
+          ansible.builtin.assert:
+            that:
+              - excalidraw_room_node_version.stdout | trim == excalidraw_room_molecule_pinned_node
+              - excalidraw_room_pid1.stdout | trim == 'node dist/index.js'
+              # Proof that the comparison discriminates: the same check against a release nobody
+              # has ever cut has to fail.
+              - excalidraw_room_molecule_pinned_node != 'v0.0.0'
+            fail_msg: >-
+              The container runs Node.js {{ excalidraw_room_node_version.stdout | trim }} as
+              `{{ excalidraw_room_pid1.stdout | trim }}`, while defaults/main.yml pins
+              {{ excalidraw_room_molecule_pinned_node }}
+              ({{ excalidraw_room_role_defaults.excalidraw_room_container_image_self_build_base_image_tag }})
+              and templates/Dockerfile.j2 asks for `node dist/index.js`
+            success_msg: >-
+              The container runs Node.js {{ excalidraw_room_node_version.stdout | trim }}, the
+              release `excalidraw_room_container_image_self_build_base_image_tag` pins, as
+              `{{ excalidraw_room_pid1.stdout | trim }}`
+
+        ########################################################################
+        #                                                                      #
+        # the negative control for the Traefik labels                          #
+        #                                                                      #
+        ########################################################################
+
+        # The pre-built image's scenario turns the Traefik labels on and asserts what they say.
+        # This one leaves them off, so the same template must produce a container with none.
+        - name: Assert that no Traefik labels are attached when they are turned off
+          ansible.builtin.assert:
+            that: (excalidraw_room_molecule_container.Config.Labels | default({})).keys() | select('match', '^traefik[.]') | list == []
+            fail_msg: >-
+              `excalidraw_room_container_labels_traefik_enabled` is off, yet the container carries
+              {{ (excalidraw_room_molecule_container.Config.Labels | default({})).keys() | select('match', '^traefik[.]') | list }}
+            success_msg: "No Traefik labels are attached, as `excalidraw_room_container_labels_traefik_enabled: false` asks"
+
+        ########################################################################
+        #                                                                      #
+        # the build is the role's, not upstream's                              #
+        #                                                                      #
+        ########################################################################
+
+        # `tasks/install.yml` writes these two over what the checkout came with. If the write
+        # ever stopped happening, the build would fall back to upstream's `FROM node:12-alpine`
+        # Dockerfile, and the version assertion above is the only other thing that would notice.
+        - name: Read the Dockerfile the role wrote into the checkout
+          ansible.builtin.slurp:
+            src: /excalidraw-room/docker-src/Dockerfile
+          register: excalidraw_room_dockerfile
+
+        - name: Assert that the checkout is being built from the role's own Dockerfile
+          vars:
+            excalidraw_room_molecule_dockerfile: "{{ excalidraw_room_dockerfile.content | b64decode }}"
+          ansible.builtin.assert:
+            that:
+              - "'FROM ' ~ excalidraw_room_role_defaults.excalidraw_room_container_image_self_build_base_image_name ~ ':' ~ excalidraw_room_role_defaults.excalidraw_room_container_image_self_build_base_image_tag in excalidraw_room_molecule_dockerfile"
+              - "'node:12-alpine' not in excalidraw_room_molecule_dockerfile"
+              - "'EXPOSE ' ~ excalidraw_room_container_http_port | string in excalidraw_room_molecule_dockerfile"
+            fail_msg: >-
+              /excalidraw-room/docker-src/Dockerfile is not the one this role renders:
+              {{ excalidraw_room_molecule_dockerfile }}
+            success_msg: >-
+              The checkout is built from the role's own Dockerfile, which is based on
+              {{ excalidraw_room_role_defaults.excalidraw_room_container_image_self_build_base_image_name }}:{{ excalidraw_room_role_defaults.excalidraw_room_container_image_self_build_base_image_tag }}
+
+        - name: Report what was verified
+          ansible.builtin.debug:
+            msg:
+              - "excalidraw-room.service: {{ excalidraw_room_service.status.ActiveState }}"
+              - "image: {{ excalidraw_room_molecule_container.Config.Image }} on Node.js {{ excalidraw_room_node_version.stdout | trim }}"
+              - "published: container {{ excalidraw_room_container_http_port }} on host {{ excalidraw_room_container_http_host_bind_port }}"
+              - "allowed origin: {{ excalidraw_room_cors.access_control_allow_origin }}"
+              - "collaboration: two Socket.IO clients relayed a scene through a shared room"
+              - "EXCALIDRAW COLLABORATION SERVER VERIFICATION COMPLETE"
+      rescue:
+        # Whatever went wrong, the reason is usually in the service log, and nobody reading a
+        # failed CI run has a container left to look in.
+        - name: Retrieve the Excalidraw collaboration server service log
+          ansible.builtin.command:
+            cmd: journalctl --no-pager -xeu excalidraw-room.service
+          register: excalidraw_room_service_log
+          changed_when: false
+
+        - name: Show the Excalidraw collaboration server service log
+          ansible.builtin.debug:
+            var: excalidraw_room_service_log.stdout_lines
+
+        - name: Fail because verification did not pass
+          ansible.builtin.fail:
+            msg: "Excalidraw collaboration server verification failed. The service log is printed above."

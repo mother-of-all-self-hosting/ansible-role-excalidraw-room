@@ -1,0 +1,82 @@
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2026 Suguru Hirahara
+# SPDX-FileCopyrightText: 2026 spatterlight
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+dependency:
+  name: galaxy
+  options:
+    requirements-file: requirements.yml
+    force: true
+driver:
+  name: docker
+platforms:
+  - name: excalidraw-room-${MOLECULE_DISTRO:-ubuntu2604}-default-selfbuild
+    image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2604}-ansible:latest"
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
+    privileged: true
+    pre_build_image: true
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      callback_result_format: yaml
+  inventory:
+    group_vars:
+      all:
+        # Variables for Excalidraw collaboration server
+        excalidraw_room_uid: 1000
+        excalidraw_room_gid: 1000
+        excalidraw_room_scheme: http
+        excalidraw_room_hostname: localhost
+
+        # Turned off here and left on in the `default` scenario, so that both branches of
+        # templates/labels.j2 get exercised.
+        excalidraw_room_container_labels_traefik_enabled: false
+
+        # Neither the 80 the collaboration server binds when PORT is absent, nor the 3002 it
+        # binds in development mode, nor the 443 the role defaults to, nor the ports the
+        # `default` scenario uses.
+        excalidraw_room_container_http_port: 24573
+        excalidraw_room_container_http_host_bind_port: 24572
+
+        # An unconfigured collaboration server answers `Access-Control-Allow-Origin: *`.
+        # This is a value only this scenario would produce.
+        excalidraw_room_environment_variables_cors_origin: http://excalidraw.molecule-selfbuild.invalid
+
+        # Test self-building, which is what the role does by default
+        excalidraw_room_container_image_self_build: true
+
+        # Variables for the verification suite
+        excalidraw_room_molecule_scenario: selfbuild
+        excalidraw_room_molecule_base_url: http://127.0.0.1:24572
+  env:
+    # Workaround for https://github.com/ansible/molecule/issues/4391
+    ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..:/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:~/.ansible/roles
+scenario:
+  # See: https://docs.ansible.com/projects/molecule/configuration/#scenario
+  #
+  # The idempotence step is left out on purpose. This role writes its own Dockerfile and
+  # .dockerignore over the ones the collaboration server ships, and `ansible.builtin.git` resets
+  # the checkout on every run, so those two templates are written afresh and report themselves
+  # changed every time. Making the self-build idempotent needs the rebuild decision to be driven
+  # by the state of the built image rather than by the changed flags of the tasks before it.
+  test_sequence:
+    - dependency
+    - cleanup
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - side_effect
+    - verify
+    - cleanup
+    - destroy
+verifier:
+  name: ansible

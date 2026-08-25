@@ -1,0 +1,193 @@
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2026 Suguru Hirahara
+# SPDX-FileCopyrightText: 2026 spatterlight
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# The part of the verification suite that both Excalidraw collaboration server scenarios run.
+#
+# The collaboration server is a Socket.IO relay and nothing else. It stores nothing, has no
+# database, no schema and no state that survives a restart; two browsers drawing together send
+# each other encrypted scenes through it and it forwards them to whoever else is in the same room.
+#
+# That makes what is worth asserting unusually clear, and unusually easy to get wrong. `GET /`
+# answers `Excalidraw collaboration server is up :)` from a two-line Express handler which knows
+# nothing about collaboration, and would keep answering it with Socket.IO entirely broken. So the
+# central check here is not an HTTP status: it is `molecule/files/excalidraw-room-collaboration-probe.py`,
+# which opens two Socket.IO clients, puts them in a room and makes the server relay a message
+# between them - and which was itself checked against a stock Socket.IO server, an echo-everything
+# server, an nginx and a closed port before being trusted here.
+#
+# `systemctl is-active` is likewise close to worthless on its own: the systemd unit says
+# `Restart=always`, so a container crash-looping every 30 seconds reads as active. It is a
+# precondition below rather than a result.
+
+---
+- name: Include the role's default variables under a separate name
+  ansible.builtin.include_vars:
+    # Only leaf values may be read out of this. Anything written in terms of another variable
+    # would be resolved in the surrounding scope, where the role's variables do not exist.
+    # Loading it under a name of its own also keeps it from outranking the values this scenario
+    # deliberately tuned.
+    file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
+    name: excalidraw_room_role_defaults
+
+- name: Wait for the Excalidraw collaboration server systemd service to become active
+  ansible.builtin.systemd_service:
+    name: excalidraw-room.service
+  register: excalidraw_room_service
+  until: excalidraw_room_service.status.ActiveState == 'active'
+  retries: 36
+  delay: 5
+
+- name: Assert that the Excalidraw collaboration server systemd service is active
+  ansible.builtin.assert:
+    that: excalidraw_room_service.status.ActiveState == 'active'
+    fail_msg: "excalidraw-room.service is {{ excalidraw_room_service.status.ActiveState }}, not active"
+    success_msg: "excalidraw-room.service is active"
+
+########################################################################
+#                                                                      #
+# what the role handed to Docker                                       #
+#                                                                      #
+########################################################################
+
+- name: Inspect the Excalidraw collaboration server container
+  ansible.builtin.command:
+    cmd: docker inspect excalidraw-room
+  register: excalidraw_room_container_inspect
+  changed_when: false
+  retries: 12
+  delay: 5
+  until: excalidraw_room_container_inspect.rc == 0
+
+- name: Set facts about the Excalidraw collaboration server container
+  ansible.builtin.set_fact:
+    excalidraw_room_molecule_container: "{{ excalidraw_room_container_inspect.stdout | from_json | first }}"
+
+- name: Assert that Excalidraw collaboration server runs on the container network the role creates
+  ansible.builtin.assert:
+    that: excalidraw_room_molecule_container.NetworkSettings.Networks.keys() | list == ['excalidraw-room']
+    fail_msg: >-
+      The container is attached to
+      {{ excalidraw_room_molecule_container.NetworkSettings.Networks.keys() | list }}, not to the
+      single `excalidraw-room` network `excalidraw_room_container_network` names
+    success_msg: "The container is attached to the `excalidraw-room` container network and to nothing else"
+
+# `excalidraw_room_container_http_host_bind_port` is a value nothing but this role supplies, and
+# the mapping has to name the port the server inside the container is expected to listen on.
+# A role that published the wrong container port would still produce a container, a mapping and
+# an active unit.
+- name: Assert that the container publishes the port the scenario asked for
+  vars:
+    excalidraw_room_molecule_published: >-
+      {{ excalidraw_room_molecule_container.NetworkSettings.Ports.get(excalidraw_room_container_http_port | string ~ '/tcp') or [] }}
+  ansible.builtin.assert:
+    that:
+      - excalidraw_room_molecule_published | length > 0
+      - excalidraw_room_molecule_published | map(attribute='HostPort') | unique | list == [excalidraw_room_container_http_host_bind_port | string]
+    fail_msg: >-
+      Container port {{ excalidraw_room_container_http_port }} is published as
+      {{ excalidraw_room_molecule_published }}, and not on host port
+      {{ excalidraw_room_container_http_host_bind_port }}.
+      The container publishes {{ excalidraw_room_molecule_container.NetworkSettings.Ports }}.
+    success_msg: >-
+      Container port {{ excalidraw_room_container_http_port }} is published on host port
+      {{ excalidraw_room_container_http_host_bind_port }}
+
+# The environment file is written by `templates/env.j2` and reaches the container through
+# `--env-file` in the systemd unit. That it reached the container is all this says; that the
+# server acted on it is what the probe and the CORS check below establish.
+- name: Assert that the role's environment file reached the container
+  vars:
+    excalidraw_room_molecule_env: "{{ excalidraw_room_molecule_container.Config.Env }}"
+  ansible.builtin.assert:
+    that:
+      - "'PORT=' ~ excalidraw_room_container_http_port | string in excalidraw_room_molecule_env"
+      - "'CORS_ORIGIN=' ~ excalidraw_room_environment_variables_cors_origin in excalidraw_room_molecule_env"
+      - "'TZ=' ~ excalidraw_room_role_defaults.excalidraw_room_environment_variables_tz in excalidraw_room_molecule_env"
+    fail_msg: "The container's environment is {{ excalidraw_room_molecule_env }}"
+    success_msg: "The container's environment carries the PORT, CORS_ORIGIN and TZ values templates/env.j2 renders"
+
+########################################################################
+#                                                                      #
+# the collaboration server, doing its job                              #
+#                                                                      #
+########################################################################
+
+- name: Wait for Excalidraw collaboration server to answer
+  ansible.builtin.uri:
+    url: "{{ excalidraw_room_molecule_base_url }}/"
+    method: GET
+    status_code: [200]
+    follow_redirects: none
+    return_content: true
+  register: excalidraw_room_index
+  until: excalidraw_room_index.status == 200
+  retries: 60
+  delay: 5
+
+# The port is the first thing `templates/env.j2` sends the server that it has to act on rather
+# than merely receive. Every scenario picks a port that is neither 80 nor 3002, the two the
+# server falls back to on its own, so that reaching it at all is proof that PORT arrived. That
+# is what the wait above has just established, and the probe below re-establishes for Socket.IO.
+- name: Assert that the collaboration server answered, and as itself
+  ansible.builtin.assert:
+    that:
+      - excalidraw_room_index.status == 200
+      - "'Excalidraw collaboration server is up' in excalidraw_room_index.content"
+    fail_msg: >-
+      {{ excalidraw_room_molecule_base_url }}/ answered {{ excalidraw_room_index.status }} with
+      {{ excalidraw_room_index.content | default('') | truncate(200) }}
+    success_msg: >-
+      The collaboration server answers on port {{ excalidraw_room_container_http_port }}, which
+      is neither of the ports it would pick on its own, so PORT from templates/env.j2 reached it
+
+# `CORS_ORIGIN` is the second value from `templates/env.j2` that the process has to act on, and
+# the only one visible in a response header. Each scenario sets a value of its own here; an
+# unconfigured collaboration server answers `*`, so finding that instead would mean the
+# environment file was written and then ignored.
+- name: Ask the Socket.IO endpoint what origin it allows
+  ansible.builtin.uri:
+    url: "{{ excalidraw_room_molecule_base_url }}/socket.io/?EIO=4&transport=polling"
+    method: GET
+    status_code: [200]
+    follow_redirects: none
+    headers:
+      Origin: "http://molecule-probe.invalid"
+  register: excalidraw_room_cors
+
+- name: Assert that the collaboration server allows the origin templates/env.j2 configured
+  ansible.builtin.assert:
+    that:
+      - excalidraw_room_cors.access_control_allow_origin is defined
+      - excalidraw_room_cors.access_control_allow_origin == excalidraw_room_environment_variables_cors_origin
+      - excalidraw_room_cors.access_control_allow_origin != '*'
+    fail_msg: >-
+      The Socket.IO endpoint answered
+      `Access-Control-Allow-Origin: {{ excalidraw_room_cors.access_control_allow_origin | default('nothing') }}`
+      while templates/env.j2 rendered
+      `CORS_ORIGIN={{ excalidraw_room_environment_variables_cors_origin }}`.
+      `*` in particular is what a collaboration server which never read the environment file
+      would answer.
+    success_msg: >-
+      The Socket.IO endpoint allows `{{ excalidraw_room_cors.access_control_allow_origin }}`, the
+      origin CORS_ORIGIN was set to, and not the `*` it defaults to on its own
+
+# The one check in this suite that exercises what the service exists for. See the probe's own
+# docstring for what each of its steps establishes and what it was falsified against.
+- name: Make two Socket.IO clients collaborate through the server
+  ansible.builtin.script:
+    cmd: >-
+      {{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/molecule/files/excalidraw-room-collaboration-probe.py
+      --host 127.0.0.1
+      --port {{ excalidraw_room_container_http_host_bind_port }}
+      --room molecule-{{ excalidraw_room_molecule_scenario }}
+      --payload excalidraw-room-molecule-{{ excalidraw_room_molecule_scenario }}
+      --timeout 30
+  register: excalidraw_room_probe
+  changed_when: false
+
+- name: Report what the collaboration probe established
+  ansible.builtin.debug:
+    var: (excalidraw_room_probe.stdout | from_json).checks
