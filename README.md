@@ -20,6 +20,14 @@ Check [`defaults/main.yml`](defaults/main.yml) for the full list of supported op
 
 ## Development
 
+### Releases
+
+Tags are created by [`.github/workflows/autotag.yml`](.github/workflows/autotag.yml), which asks [`bin/compute-next-tag.sh`](bin/compute-next-tag.sh) what the commit on `main` should be released as. The answer comes from [`defaults/main.yml`](defaults/main.yml) and from the tags that already exist, so a commit that only touches documentation or CI is not released at all, and any change to the role itself is — without waiting for a dependency bump to carry it along.
+
+The Excalidraw collaboration server publishes no versions of its own, so the version component of a tag is inherited from the newest tag that already exists and only the release counter moves — the same shape as [`ansible-role-excalidraw`](https://github.com/mother-of-all-self-hosting/ansible-role-excalidraw). Should the collaboration server ever start publishing versions, naming one in `excalidraw_room_version` opens a series of its own.
+
+[`bin/test-compute-next-tag.sh`](bin/test-compute-next-tag.sh) exercises that script against throwaway repositories, and runs as a prek hook.
+
 ### pre-commit
 
 You can optionally install a Git pre-commit hook (via [mise](https://mise.jdx.dev/) + [prek](https://prek.j178.dev/)) that runs formatting and linting checks before each commit. See [`.pre-commit-config.yaml`](./.pre-commit-config.yaml) for which hooks are to be executed.
