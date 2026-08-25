@@ -244,6 +244,17 @@ excalidraw_room_container_cleanup_command: |
 # Specify the timezone
 excalidraw_room_environment_variables_tz: UTC
 
+# Specifies the value of the `Access-Control-Allow-Origin` header that the collaboration server
+# answers its Socket.IO requests with.
+#
+# The default of `*` is the collaboration server's own, and lets any web page on the internet open
+# a collaboration session against this server. Set it to the origin of your Excalidraw instance
+# (e.g. `https://excalidraw.example.com`) to keep the browsers of other origins out.
+#
+# Note that the collaboration server hands this value back verbatim rather than matching the
+# request's `Origin` header against it, so a list of origins is not supported.
+excalidraw_room_environment_variables_cors_origin: "*"
+
 # Additional environment variables.
 excalidraw_room_environment_variables_additional_variables: ""
 

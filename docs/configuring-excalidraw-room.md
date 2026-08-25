@@ -61,6 +61,16 @@ After adjusting the hostname, make sure to adjust your DNS records to point the 
 
 **Note**: hosting Excalidraw collaboration server client under a subpath (by configuring the `excalidraw_room_path_prefix` variable) does not seem to be possible due to Excalidraw collaboration server's technical limitations.
 
+### Restricting which origins may collaborate
+
+By default the collaboration server answers `Access-Control-Allow-Origin: *`, which lets a web page on any origin open a collaboration session against it. To allow only your own Excalidraw instance, add the following configuration to your `vars.yml` file:
+
+```yaml
+excalidraw_room_environment_variables_cors_origin: "https://excalidraw.example.com"
+```
+
+**Note**: the collaboration server hands this value back verbatim rather than matching a request's `Origin` header against it, so a list of origins is not supported.
+
 ### Choosing between building the image and pulling it
 
 The role builds the container image on your server by default. The alternative is the image Excalidraw publishes on Docker Hub, which you can select with:
