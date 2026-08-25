@@ -27,16 +27,29 @@ excalidraw_room_hostname: ""
 # This value must either be `/` or not end with a slash (e.g. `/excalidraw-room`).
 excalidraw_room_path_prefix: /
 
-excalidraw_room_container_image: ""
-excalidraw_room_container_image_tag: ""
+# Excalidraw's collaboration server publishes no versioned releases.
+# Its git repository carries no tags and no releases at all, and `excalidraw/excalidraw-room`
+# on Docker Hub carries a single usable tag, `latest`, next to a set of `sha-*` tags.
+# `latest` and the `master` branch have both stood still since December 2023.
+#
+# When self-building (the default), this value selects the git ref to build - `latest` means `master`.
+# Otherwise it is the Docker Hub tag to pull.
+#
+# There is deliberately no `# renovate:` annotation here: there is nothing for Renovate to track.
+# It is also why the version component of this repository's own tags is a date somebody picked
+# by hand rather than anything derived from upstream. The same is true of `ansible-role-excalidraw`.
+excalidraw_room_version: latest
+
+excalidraw_room_container_image: "{{ excalidraw_room_container_image_registry_prefix }}excalidraw/excalidraw-room:{{ excalidraw_room_container_image_tag }}"
+excalidraw_room_container_image_tag: "{{ excalidraw_room_version }}"
 excalidraw_room_container_image_registry_prefix: "{{ excalidraw_room_container_image_registry_prefix_upstream }}"
 excalidraw_room_container_image_registry_prefix_upstream: "{{ excalidraw_room_container_image_registry_prefix_upstream_default }}"
-excalidraw_room_container_image_registry_prefix_upstream_default: ""
+excalidraw_room_container_image_registry_prefix_upstream_default: docker.io/
 
 excalidraw_room_container_image_self_build: true
 excalidraw_room_container_image_self_build_name: "excalidraw/excalidraw-room:{{ excalidraw_room_container_image_self_build_repo_version }}"
 excalidraw_room_container_image_self_build_repo: "https://github.com/excalidraw/excalidraw-room.git"
-excalidraw_room_container_image_self_build_repo_version: "master"
+excalidraw_room_container_image_self_build_repo_version: "{{ excalidraw_room_version if excalidraw_room_version != 'latest' else 'master' }}"
 excalidraw_room_container_image_self_build_src_files_path: "{{ excalidraw_room_base_path }}/docker-src"
 
 # The base container network. It will be auto-created by this role if it doesn't exist already.

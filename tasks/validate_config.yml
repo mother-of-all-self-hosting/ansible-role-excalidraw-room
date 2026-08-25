@@ -25,6 +25,22 @@
     - excalidraw_room_hostname
     - excalidraw_room_path_prefix
     - excalidraw_room_container_network
+    - excalidraw_room_version
+    - excalidraw_room_container_http_port
+
+# Without this, emptying one of these settings produces a `docker build` against a `FROM :`
+# line, or a `docker pull ""`, neither of which says what is actually wrong.
+- name: Fail if required Excalidraw collaboration server container image settings not defined
+  ansible.builtin.fail:
+    msg: >-
+      You need to define a required configuration setting (`{{ item }}`).
+  when: "lookup('vars', item, default='') | string | length == 0"
+  with_items: >-
+    {{
+      ['excalidraw_room_container_image_self_build_repo', 'excalidraw_room_container_image_self_build_repo_version', 'excalidraw_room_container_image_self_build_base_image_tag']
+      if excalidraw_room_container_image_self_build | bool
+      else ['excalidraw_room_container_image']
+    }}
 
 - name: Run if Traefik is enabled
   when: excalidraw_room_container_labels_traefik_enabled | bool
