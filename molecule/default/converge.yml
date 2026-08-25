@@ -29,7 +29,13 @@
       ansible.builtin.systemd_service:
         daemon_reload: true
 
+    # `excalidraw_room_restart_necessary` is what a playbook's systemd service manager acts on,
+    # and the role computes it out of every template, pull and build it performed. Honouring it
+    # here is what makes a second converge against a live instance actually replace the container,
+    # rather than leaving the previous one running while the verification reads the new
+    # configuration off disk. It is also the only thing in this suite that exercises that
+    # computation at all.
     - name: Ensure Excalidraw collaboration server systemd service is started
       ansible.builtin.systemd_service:
         name: excalidraw-room.service
-        state: started
+        state: "{{ 'restarted' if excalidraw_room_restart_necessary | bool else 'started' }}"
