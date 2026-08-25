@@ -100,15 +100,17 @@
         # the container through `--label-file`, so what they say is a statement about the role.
         - name: Assert that the Traefik labels the role renders reached the container
           vars:
-            excalidraw_room_molecule_labels: "{{ excalidraw_room_molecule_container.Config.Labels }}"
+            # `.get()` rather than `[...]`, so that a container carrying no Traefik labels at
+            # all reports what it is missing instead of raising a template error about it.
+            excalidraw_room_molecule_labels: "{{ excalidraw_room_molecule_container.Config.Labels | default({}) }}"
           ansible.builtin.assert:
             that:
-              - excalidraw_room_molecule_labels['traefik.enable'] == 'true'
-              - excalidraw_room_molecule_labels['traefik.docker.network'] == 'excalidraw-room'
-              - excalidraw_room_molecule_labels['traefik.http.routers.excalidraw-room.rule'] == 'Host(`' ~ excalidraw_room_hostname ~ '`)'
-              - excalidraw_room_molecule_labels['traefik.http.routers.excalidraw-room.entrypoints'] == excalidraw_room_container_labels_traefik_entrypoints
-              - excalidraw_room_molecule_labels['traefik.http.services.excalidraw-room.loadbalancer.server.port'] == excalidraw_room_container_http_port | string
-              - excalidraw_room_molecule_labels['traefik.http.middlewares.excalidraw-room-add-response-headers.headers.customresponseheaders.X-Content-Type-Options'] == 'nosniff'
+              - excalidraw_room_molecule_labels.get('traefik.enable') == 'true'
+              - excalidraw_room_molecule_labels.get('traefik.docker.network') == 'excalidraw-room'
+              - excalidraw_room_molecule_labels.get('traefik.http.routers.excalidraw-room.rule') == 'Host(`' ~ excalidraw_room_hostname ~ '`)'
+              - excalidraw_room_molecule_labels.get('traefik.http.routers.excalidraw-room.entrypoints') == excalidraw_room_container_labels_traefik_entrypoints
+              - excalidraw_room_molecule_labels.get('traefik.http.services.excalidraw-room.loadbalancer.server.port') == excalidraw_room_container_http_port | string
+              - excalidraw_room_molecule_labels.get('traefik.http.middlewares.excalidraw-room-add-response-headers.headers.customresponseheaders.X-Content-Type-Options') == 'nosniff'
             fail_msg: "The container's labels are {{ excalidraw_room_molecule_labels }}"
             success_msg: >-
               The container carries the Traefik router, service and response-header labels

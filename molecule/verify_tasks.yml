@@ -53,8 +53,13 @@
 ########################################################################
 
 - name: Inspect the Excalidraw collaboration server container
+  # `docker inspect` falls back to matching images, networks and volumes when no container of
+  # that name exists - and this role creates a network called `excalidraw-room`. Everything
+  # below would then be reading a network object and failing with template errors about missing
+  # attributes rather than saying that the container is gone. `docker container inspect` only
+  # ever looks at containers.
   ansible.builtin.command:
-    cmd: docker inspect excalidraw-room
+    cmd: docker container inspect excalidraw-room
   register: excalidraw_room_container_inspect
   changed_when: false
   retries: 12
