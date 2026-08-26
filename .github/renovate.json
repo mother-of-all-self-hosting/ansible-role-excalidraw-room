@@ -9,7 +9,7 @@
     "What the suite cannot see, and what a reviewer of a red build should keep in mind: the self-build compiles the collaboration server's unpinned `master`, so a failure on an automerge branch may belong to upstream rather than to the Node.js bump. That direction fails closed and blocks the merge, which is the right way round. Minor and major Node.js bumps stay pull requests for a human, which matters because a major is where the 2021-era dependency tree this project pins would be most likely to stop compiling."
   ],
   "extends": [
-    "github>mother-of-all-self-hosting/renovate-config#v1.0.0",
-    "github>mother-of-all-self-hosting/renovate-config//patch-automerge#v1.0.0"
+    "github>mother-of-all-self-hosting/renovate-config#v1.1.0",
+    "github>mother-of-all-self-hosting/renovate-config//patch-automerge#v1.1.0"
   ]
 }
