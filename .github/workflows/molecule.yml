@@ -40,19 +40,9 @@ jobs:
       matrix:
         distro:
           - ubuntu2604
-          - debian13
         scenario:
           - default
           - default-selfbuild
-        # The self-build scenario compiles the collaboration server with Node inside a container
-        # and runs the result in another one. Neither step cares which distribution the Docker
-        # daemon happens to run on, so building it a second time tests nothing the first run has
-        # not. It is not gated on version bumps either: it is the scenario that covers the one
-        # dependency Renovate proposes updates for here, so it has to run on every push for
-        # automerge to mean anything.
-        exclude:
-          - distro: debian13
-            scenario: default-selfbuild
       fail-fast: false
 
     env:
