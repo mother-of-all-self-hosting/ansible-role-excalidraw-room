@@ -67,7 +67,7 @@ excalidraw_room_container_image_self_build_src_files_path: "{{ excalidraw_room_b
 excalidraw_room_container_image_self_build_base_image: "{{ excalidraw_room_container_image_self_build_base_image_name }}:{{ excalidraw_room_container_image_self_build_base_image_tag }}"
 excalidraw_room_container_image_self_build_base_image_name: docker.io/library/node
 # renovate: datasource=docker depName=node versioning=docker
-excalidraw_room_container_image_self_build_base_image_tag: 24.19.0-alpine
+excalidraw_room_container_image_self_build_base_image_tag: 24.20.0-alpine
 
 # The base container network. It will be auto-created by this role if it doesn't exist already.
 excalidraw_room_container_network: "{{ excalidraw_room_identifier }}"
