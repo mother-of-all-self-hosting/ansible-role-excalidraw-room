@@ -42,6 +42,13 @@ jobs:
           - ubuntu2604
         scenario:
           - default
+          # Other roles gate their self-build scenario on a version bump in
+          # defaults/main.yml, since self-building only produces a different
+          # image when the version changes. That gate would never fire here:
+          # `excalidraw_room_version` is the constant `latest`, and self-building
+          # tracks upstream's `master` branch, which moves on its own. So the
+          # scenario runs unconditionally, as the only thing that watches for
+          # upstream breaking the build.
           - default-selfbuild
       fail-fast: false
 
