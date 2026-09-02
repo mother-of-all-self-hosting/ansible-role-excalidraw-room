@@ -14,6 +14,10 @@ excalidraw_room_enabled: true
 excalidraw_room_identifier: excalidraw-room
 excalidraw_room_base_path: "/{{ excalidraw_room_identifier }}"
 
+# Excalidraw's collaboration server publishes no versioned releases.
+# There is deliberately no `# renovate:` annotation here: there is nothing for Renovate to track.
+excalidraw_room_version: latest
+
 excalidraw_room_uid: ""
 excalidraw_room_gid: ""
 
@@ -26,10 +30,6 @@ excalidraw_room_hostname: ""
 # The path at which Excalidraw collaboration server is served.
 # This value must either be `/` or not end with a slash (e.g. `/excalidraw-room`).
 excalidraw_room_path_prefix: /
-
-# Excalidraw's collaboration server publishes no versioned releases.
-# There is deliberately no `# renovate:` annotation here: there is nothing for Renovate to track.
-excalidraw_room_version: latest
 
 excalidraw_room_container_image: "{{ excalidraw_room_container_image_registry_prefix }}excalidraw/excalidraw-room:{{ excalidraw_room_container_image_tag }}"
 excalidraw_room_container_image_tag: "{{ excalidraw_room_version }}"
