@@ -28,16 +28,7 @@ excalidraw_room_hostname: ""
 excalidraw_room_path_prefix: /
 
 # Excalidraw's collaboration server publishes no versioned releases.
-# Its git repository carries no tags and no releases at all, and `excalidraw/excalidraw-room`
-# on Docker Hub carries a single usable tag, `latest`, next to a set of `sha-*` tags.
-# `latest` and the `master` branch have both stood still since December 2023.
-#
-# When self-building (the default), this value selects the git ref to build - `latest` means `master`.
-# Otherwise it is the Docker Hub tag to pull.
-#
 # There is deliberately no `# renovate:` annotation here: there is nothing for Renovate to track.
-# It is also why the version component of this repository's own tags is a date somebody picked
-# by hand rather than anything derived from upstream. The same is true of `ansible-role-excalidraw`.
 excalidraw_room_version: latest
 
 excalidraw_room_container_image: "{{ excalidraw_room_container_image_registry_prefix }}excalidraw/excalidraw-room:{{ excalidraw_room_container_image_tag }}"
