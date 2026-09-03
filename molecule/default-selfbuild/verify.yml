@@ -136,10 +136,8 @@
               - "published: container {{ excalidraw_room_container_http_port }} on host {{ excalidraw_room_container_http_host_bind_port }}"
               - "allowed origin: {{ excalidraw_room_cors.access_control_allow_origin }}"
               - "collaboration: two Socket.IO clients relayed a scene through a shared room"
-              - "EXCALIDRAW COLLABORATION SERVER VERIFICATION COMPLETE"
       rescue:
-        # Whatever went wrong, the reason is usually in the service log, and nobody reading a
-        # failed CI run has a container left to look in.
+        # Whatever went wrong, the reason is almost always in the service log.
         - name: Retrieve the Excalidraw collaboration server service log
           ansible.builtin.command:
             cmd: journalctl --no-pager -xeu excalidraw-room.service
