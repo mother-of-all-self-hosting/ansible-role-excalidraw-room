@@ -37,11 +37,11 @@
           ansible.builtin.assert:
             that:
               - excalidraw_room_molecule_container.Config.Image is search('excalidraw/excalidraw-room:')
-              - excalidraw_room_molecule_container.Config.Image.endswith(':' ~ excalidraw_room_role_defaults.excalidraw_room_version)
+              - excalidraw_room_molecule_container.Config.Image.endswith(':' ~ excalidraw_room_defaults.excalidraw_room_version)
             fail_msg: >-
               The container runs {{ excalidraw_room_molecule_container.Config.Image }}, which is not
               excalidraw/excalidraw-room at the
-              '{{ excalidraw_room_role_defaults.excalidraw_room_version }}' tag
+              '{{ excalidraw_room_defaults.excalidraw_room_version }}' tag
               `excalidraw_room_version` names
             success_msg: >-
               The container runs {{ excalidraw_room_molecule_container.Config.Image }}, the tag
@@ -72,7 +72,7 @@
         # image, which has not moved since 2023.
         - name: Assert that the pre-built image is not running the Node.js the self-build pins
           vars:
-            excalidraw_room_molecule_pinned_node: "v{{ excalidraw_room_role_defaults.excalidraw_room_container_image_self_build_base_image_tag | regex_replace('-.*$', '') }}"
+            excalidraw_room_molecule_pinned_node: "v{{ excalidraw_room_defaults.excalidraw_room_container_image_self_build_base_image_tag | regex_replace('-.*$', '') }}"
           ansible.builtin.assert:
             that:
               - excalidraw_room_node_version.stdout | trim != excalidraw_room_molecule_pinned_node

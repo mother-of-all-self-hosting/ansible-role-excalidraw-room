@@ -64,7 +64,7 @@
         # pre-built image upstream publishes goes through `yarn start`.
         - name: Assert that the running Node.js is the release defaults/main.yml pins
           vars:
-            excalidraw_room_molecule_pinned_node: "v{{ excalidraw_room_role_defaults.excalidraw_room_container_image_self_build_base_image_tag | regex_replace('-.*$', '') }}"
+            excalidraw_room_molecule_pinned_node: "v{{ excalidraw_room_defaults.excalidraw_room_container_image_self_build_base_image_tag | regex_replace('-.*$', '') }}"
           ansible.builtin.assert:
             that:
               - excalidraw_room_node_version.stdout | trim == excalidraw_room_molecule_pinned_node
@@ -76,7 +76,7 @@
               The container runs Node.js {{ excalidraw_room_node_version.stdout | trim }} as
               `{{ excalidraw_room_pid1.stdout | trim }}`, while defaults/main.yml pins
               {{ excalidraw_room_molecule_pinned_node }}
-              ({{ excalidraw_room_role_defaults.excalidraw_room_container_image_self_build_base_image_tag }})
+              ({{ excalidraw_room_defaults.excalidraw_room_container_image_self_build_base_image_tag }})
               and templates/Dockerfile.j2 asks for `node dist/index.js`
             success_msg: >-
               The container runs Node.js {{ excalidraw_room_node_version.stdout | trim }}, the
@@ -118,7 +118,7 @@
             excalidraw_room_molecule_dockerfile: "{{ excalidraw_room_dockerfile.content | b64decode }}"
           ansible.builtin.assert:
             that:
-              - "'FROM ' ~ excalidraw_room_role_defaults.excalidraw_room_container_image_self_build_base_image_name ~ ':' ~ excalidraw_room_role_defaults.excalidraw_room_container_image_self_build_base_image_tag in excalidraw_room_molecule_dockerfile"
+              - "'FROM ' ~ excalidraw_room_defaults.excalidraw_room_container_image_self_build_base_image_name ~ ':' ~ excalidraw_room_defaults.excalidraw_room_container_image_self_build_base_image_tag in excalidraw_room_molecule_dockerfile"
               - "'node:12-alpine' not in excalidraw_room_molecule_dockerfile"
               - "'EXPOSE ' ~ excalidraw_room_container_http_port | string in excalidraw_room_molecule_dockerfile"
             fail_msg: >-

@@ -23,14 +23,13 @@
 # precondition below rather than a result.
 
 ---
-- name: Include the role's default variables under a separate name
+# The role is not included in this playbook, so its defaults are not in
+# scope. Reading defaults/main.yml directly ties the version assertion
+# below.
+- name: Load the role defaults
   ansible.builtin.include_vars:
-    # Only leaf values may be read out of this. Anything written in terms of another variable
-    # would be resolved in the surrounding scope, where the role's variables do not exist.
-    # Loading it under a name of its own also keeps it from outranking the values this scenario
-    # deliberately tuned.
     file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
-    name: excalidraw_room_role_defaults
+    name: excalidraw_room_defaults
 
 - name: Wait for the Excalidraw collaboration server systemd service to become active
   ansible.builtin.systemd_service:
@@ -110,7 +109,7 @@
     that:
       - "'PORT=' ~ excalidraw_room_container_http_port | string in excalidraw_room_molecule_env"
       - "'CORS_ORIGIN=' ~ excalidraw_room_environment_variables_cors_origin in excalidraw_room_molecule_env"
-      - "'TZ=' ~ excalidraw_room_role_defaults.excalidraw_room_environment_variables_tz in excalidraw_room_molecule_env"
+      - "'TZ=' ~ excalidraw_room_defaults.excalidraw_room_environment_variables_tz in excalidraw_room_molecule_env"
     fail_msg: "The container's environment is {{ excalidraw_room_molecule_env }}"
     success_msg: "The container's environment carries the PORT, CORS_ORIGIN and TZ values templates/env.j2 renders"
 
