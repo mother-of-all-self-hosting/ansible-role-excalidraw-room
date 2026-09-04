@@ -126,9 +126,9 @@
               {{ excalidraw_room_molecule_dockerfile }}
             success_msg: >-
               The checkout is built from the role's own Dockerfile, which is based on
-              {{ excalidraw_room_role_defaults.excalidraw_room_container_image_self_build_base_image_name }}:{{ excalidraw_room_role_defaults.excalidraw_room_container_image_self_build_base_image_tag }}
+              {{ excalidraw_room_defaults.excalidraw_room_container_image_self_build_base_image_name }}:{{ excalidraw_room_defaults.excalidraw_room_container_image_self_build_base_image_tag }}
 
-        - name: Show Excalidraw collaboration server verification summary
+        - name: Show the Excalidraw collaboration server verification summary
           ansible.builtin.debug:
             msg:
               - "Excalidraw collaboration server systemd: {{ excalidraw_room_service.status.ActiveState }}"

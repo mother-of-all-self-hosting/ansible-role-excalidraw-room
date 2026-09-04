@@ -117,7 +117,7 @@
               templates/labels.j2 renders, routing `{{ excalidraw_room_hostname }}` to container
               port {{ excalidraw_room_container_http_port }}
 
-        - name: Show Excalidraw collaboration server verification summary
+        - name: Show the Excalidraw collaboration server verification summary
           ansible.builtin.debug:
             msg:
               - "Excalidraw collaboration server systemd: {{ excalidraw_room_service.status.ActiveState }}"
