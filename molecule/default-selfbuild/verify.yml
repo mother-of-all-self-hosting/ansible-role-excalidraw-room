@@ -15,7 +15,7 @@
 # it builds against the bumped base and then makes the running container account for itself.
 
 ---
-- name: Verify Excalidraw collaboration server
+- name: Verify self-built Excalidraw collaboration server
   hosts: all
   become: true
   gather_facts: false
