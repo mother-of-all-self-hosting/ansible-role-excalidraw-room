@@ -59,15 +59,15 @@
   # ever looks at containers.
   ansible.builtin.command:
     cmd: docker container inspect excalidraw-room
-  register: excalidraw_room_container_inspect
+  register: excalidraw_room_container_raw
   changed_when: false
   retries: 12
   delay: 5
-  until: excalidraw_room_container_inspect.rc == 0
+  until: excalidraw_room_container_raw.rc == 0
 
 - name: Set facts about the Excalidraw collaboration server container
   ansible.builtin.set_fact:
-    excalidraw_room_molecule_container: "{{ excalidraw_room_container_inspect.stdout | from_json | first }}"
+    excalidraw_room_molecule_container: "{{ excalidraw_room_container_raw.stdout | from_json | first }}"
 
 - name: Assert that Excalidraw collaboration server runs on the container network the role creates
   ansible.builtin.assert:
