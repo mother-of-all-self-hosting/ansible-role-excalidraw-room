@@ -39,7 +39,7 @@
               the locally built excalidraw/excalidraw-room:master
             success_msg: "The container runs the locally built excalidraw/excalidraw-room:master"
 
-        - name: Ask the running container which Node.js it carries
+        - name: Query the version of the running Node.js
           ansible.builtin.command:
             cmd: docker exec excalidraw-room node --version
           register: excalidraw_room_node_version
