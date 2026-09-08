@@ -141,7 +141,7 @@
         # Whatever went wrong, the reason is almost always in the systemd service log.
         - name: Retrieve the Excalidraw collaboration server systemd service log
           ansible.builtin.command:
-            cmd: journalctl --no-pager -xeu excalidraw-room.service
+            cmd: journalctl --no-pager --output=cat --unit=excalidraw-room.service
           register: excalidraw_room_service_log
           changed_when: false
 
