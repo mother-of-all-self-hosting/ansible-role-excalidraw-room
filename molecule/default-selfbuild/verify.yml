@@ -19,6 +19,11 @@
   hosts: all
   become: true
   gather_facts: false
+
+  vars:
+    excalidraw_room_verify_units:
+      - excalidraw-room.service
+
   tasks:
     - name: Verify that Excalidraw collaboration server works
       block:
@@ -131,7 +136,7 @@
         - name: Show the Excalidraw collaboration server verification summary
           ansible.builtin.debug:
             msg:
-              - "Excalidraw collaboration server systemd: {{ excalidraw_room_service.status.ActiveState }}"
+              - "Excalidraw collaboration server systemd: {% for unit, state in excalidraw_room_verify_units | zip(excalidraw_room_services.results | map(attribute='status.ActiveState')) %}{{ unit }} ({{ state }}){% if not loop.last %}, {% endif %}{% endfor %}"
               - "Excalidraw collaboration server image: {{ excalidraw_room_molecule_container.Config.Image }} on Node.js {{ excalidraw_room_node_version.stdout | trim }}"
               - "Excalidraw collaboration server published: container {{ excalidraw_room_container_http_port }} on host {{ excalidraw_room_container_http_host_bind_port }}"
               - "Excalidraw collaboration server allowed origin: {{ excalidraw_room_cors.access_control_allow_origin }}"

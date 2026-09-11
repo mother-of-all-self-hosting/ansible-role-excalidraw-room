@@ -29,6 +29,9 @@ provisioner:
   inventory:
     group_vars:
       all:
+        # Helper variables
+        excalidraw_room_debug_service_enabled: false
+
         # Variables for Excalidraw collaboration server
         excalidraw_room_uid: 1000
         excalidraw_room_gid: 1000

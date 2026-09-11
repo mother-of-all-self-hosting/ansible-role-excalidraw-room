@@ -31,13 +31,14 @@
     file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
     name: excalidraw_room_defaults
 
-- name: Wait for the Excalidraw collaboration server systemd service to become active (up to 180s)
+- name: Wait for the Excalidraw collaboration server systemd services to become active (up to 180s each)
   ansible.builtin.systemd_service:
-    name: excalidraw-room.service
-  register: excalidraw_room_service
-  until: excalidraw_room_service.status.ActiveState == 'active'
+    name: "{{ item }}"
+  register: excalidraw_room_services
+  until: excalidraw_room_services.status.ActiveState == 'active'
   retries: 36
   delay: 5
+  loop: "{{ excalidraw_room_verify_units }}"
   # So that giving up is reported by the assertion below rather than as a
   # wall of systemd unit properties.
   failed_when: false
@@ -45,11 +46,20 @@
 # `Restart=always` in the systemd unit means that even a container which crashes
 # and gets restarted reads as active here, so this is a precondition rather than
 # a result.
-- name: Assert the Excalidraw collaboration server systemd service is active
+- name: Assert the Excalidraw collaboration server systemd services are active
   ansible.builtin.assert:
-    that: excalidraw_room_service.status.ActiveState == 'active'
-    fail_msg: "excalidraw-room.service is not active ({{ excalidraw_room_service.status.ActiveState }})"
-    success_msg: "excalidraw-room.service is active"
+    that: excalidraw_room_services.results | map(attribute='status.ActiveState') | unique | list == ['active']
+    fail_msg: >-
+      Not every service is active:
+      {{ dict(excalidraw_room_verify_units | zip(excalidraw_room_services.results | map(attribute='status.ActiveState'))) }}
+    success_msg: "Every systemd service is active"
+
+- name: Retrieve the Excalidraw collaboration server systemd services log for debugging
+  when: excalidraw_room_debug_service_enabled | bool
+  ansible.builtin.command:
+    cmd: "journalctl --no-pager --output=cat --unit={{ item }}"
+  changed_when: false
+  loop: "{{ excalidraw_room_verify_units }}"
 
 ########################################################################
 #                                                                      #
