@@ -170,6 +170,7 @@
               - "Excalidraw collaboration server published: container {{ excalidraw_room_container_http_port }} on host {{ excalidraw_room_container_http_host_bind_port }}"
               - "Excalidraw collaboration server allowed origin: {{ excalidraw_room_cors.access_control_allow_origin }}"
               - "Excalidraw collaboration server collaboration: two Socket.IO clients relayed a scene through a shared room"
+
       rescue:
         # Whatever went wrong, the reason is almost always in the systemd service log.
         - name: Retrieve the Excalidraw collaboration server systemd service log
