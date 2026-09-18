@@ -46,7 +46,10 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       {% for arg in excalidraw_room_container_extra_arguments %}
       {{ arg }} \
       {% endfor %}
-      {{ excalidraw_room_container_image_self_build_name if excalidraw_room_container_image_self_build else excalidraw_room_container_image }}
+      {{ excalidraw_room_container_image_self_build_name if excalidraw_room_container_image_self_build else excalidraw_room_container_image }} \
+      {% for arg in excalidraw_room_process_extra_arguments %}
+      {{ arg }} \
+      {% endfor %}
 
 {% for network in excalidraw_room_container_additional_networks %}
 ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network connect {{ network }} {{ excalidraw_room_identifier }}
