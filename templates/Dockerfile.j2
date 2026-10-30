@@ -32,6 +32,13 @@ FROM {{ excalidraw_room_container_image_self_build_base_image }}
 WORKDIR /excalidraw-room
 
 COPY package.json yarn.lock ./
+
+{#
+  yarn is not shipped with Node 26 (see: https://github.com/nodejs/snap/issues/88),
+  so corepack is installed here to make yarn available.
+#}
+RUN npm install -g corepack
+
 RUN yarn install --frozen-lockfile --non-interactive && yarn cache clean
 
 COPY tsconfig.json ./
