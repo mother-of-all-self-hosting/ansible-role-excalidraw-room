@@ -22,9 +22,6 @@
   with_items:
     - excalidraw_room_uid
     - excalidraw_room_gid
-    - excalidraw_room_hostname
-    - excalidraw_room_path_prefix
-    - excalidraw_room_container_network
     - excalidraw_room_version
     - excalidraw_room_container_http_port
 
