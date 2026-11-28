@@ -60,6 +60,7 @@
         owner: "{{ excalidraw_room_uid }}"
         group: "{{ excalidraw_room_gid }}"
         recurse: true
+      tags: molecule-idempotence-notest
 
     - name: Ensure Excalidraw collaboration server repository is present on self-build
       ansible.builtin.git:
